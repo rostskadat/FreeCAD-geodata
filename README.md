@@ -33,3 +33,11 @@ Install prerequisites by running following command:
 1. Restart the FreeCAD.
 
 **Have Fun**
+
+## QT Designer
+
+```shell
+pip install pyqt5-tools
+pyqt5-tools designer
+# & '%AppData_DIR%\Roaming\Python\Python310\Scripts\pyqt5-tools.exe' designer
+```
