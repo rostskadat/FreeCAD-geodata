@@ -478,13 +478,18 @@ class _CommandImport:
         self.dialog = FreeCADGui.PySideUic.loadUi(
             os.path.join(os.path.dirname(__file__), "GeoDataImportDialog.ui")
         )
-        self.dialog.locationPresets.currentIndexChanged.connect(self.onLocationPresetSelected)
-        self.dialog.btnOpenBrowserWindow.clicked.connect(self.onOpenBrowserWindow)
-        self.dialog.btnGetCoordFromBrowser.clicked.connect(self.onGetCoordFromBrowser)
-        self.dialog.url.textChanged.connect(self.onUrlChanged)
-        self.dialog.zoom.valueChanged.connect(self.onZoomChanged)
-        self.dialog.latitude.valueChanged.connect(self.onLatitudeChanged)
-        self.dialog.longitude.valueChanged.connect(self.onLongitudeChanged)
+        self.dialog.osmLocationPresets.currentIndexChanged.connect(self.onOsmLocationPresetSelected)
+        self.dialog.osmOpenBrowserWindow.clicked.connect(self.onOsmOpenBrowserWindow)
+        self.dialog.osmGetCoordFromBrowser.clicked.connect(self.onOsmGetCoordFromBrowser)
+        self.dialog.osmUrl.textChanged.connect(self.onOsmUrlChanged)
+        self.dialog.osmZoom.valueChanged.connect(self.onOsmZoomChanged)
+        self.dialog.osmLatitude.valueChanged.connect(self.onOsmLatitudeChanged)
+        self.dialog.osmLongitude.valueChanged.connect(self.onOsmLongitudeChanged)
+        self.dialog.osmLongitude.valueChanged.connect(self.onOsmLongitudeChanged)
+        self.dialog.osmLongitude.valueChanged.connect(self.onOsmLongitudeChanged)
+
+        self.dialog.csvSelectFile.clicked.connect(self.onCsvSelectFile)
+
         self.dialog.btnImport.clicked.connect(self.onImport)
         self.dialog.btnClose.clicked.connect(self.onClose)
         self.dialog.progressBar.setVisible(False)
@@ -497,15 +502,15 @@ class _CommandImport:
         global GCP_ELEVATION_API_KEY
         GCP_ELEVATION_API_KEY = pref.GetString("GCP_ELEVATION_API_KEY")
 
-        self.dialog.locationPresets.addItem(QT_TRANSLATE_NOOP("GeoData", "Select a location ..."))
+        self.dialog.osmLocationPresets.addItem(QT_TRANSLATE_NOOP("GeoData", "Select a location ..."))
         self.LocationPresets = []
         resource_dir = FreeCADGui.activeWorkbench().ResourceDir
         with open(os.path.join(resource_dir, 'Presets', 'osm.json')) as f:
             presets = json.load(f)
             for preset in presets["osm"]:
                 self.LocationPresets.append(preset)
-                self.dialog.locationPresets.addItem(preset['name'])
-        self.dialog.locationPresets.setCurrentIndex(pref.GetInt("LocationPresetIndex", 0))
+                self.dialog.osmLocationPresets.addItem(preset['name'])
+        self.dialog.osmLocationPresets.setCurrentIndex(pref.GetInt("LocationPresetIndex", 0))
 
         self.dialog.btnImport.setIcon(
             QtGui.QIcon.fromTheme("edit-undo", QtGui.QIcon(":/Resources/icons/GeoData_Import.svg"))
@@ -556,7 +561,7 @@ class _CommandImport:
                 QT_TRANSLATE_NOOP("GeoData", "Could not import QtNetwork -- see Report View for details. Addon Manager unavailable.",),
             )
 
-    def onLocationPresetSelected(self, i):
+    def onOsmLocationPresetSelected(self, i):
         """Callback when the Location Preset Combo has changed
 
         Args:
@@ -576,10 +581,10 @@ class _CommandImport:
             self.Latitude = float(self.LocationPreset['latitude'])
             self.Longitude = float(self.LocationPreset['longitude'])
         self.updateBrowserUrl(self.Zoom, self.Latitude, self.Longitude)
-        self.updateUrlField(self.Zoom, self.Latitude, self.Longitude)
-        self.updateDialogCoordinate(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmUrl(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmCoordinates(self.Zoom, self.Latitude, self.Longitude)
 
-    def onOpenBrowserWindow(self):
+    def onOsmOpenBrowserWindow(self):
         """Open a Browser windows in order to for the User to navigate to
         the desired map location
         """
@@ -590,9 +595,9 @@ class _CommandImport:
         except RuntimeError as e:
             # If the User has deleted the browser window we have this error
             self.Browser = None
-            self.onOpenBrowserWindow()
+            self.onOsmOpenBrowserWindow()
 
-    def onGetCoordFromBrowser(self):
+    def onOsmGetCoordFromBrowser(self):
         """Return the URL of the browser window and set the URL field 
         accordingly.
 
@@ -610,10 +615,10 @@ class _CommandImport:
             self.Zoom = zoom
             self.Latitude = latitude
             self.Longitude = longitude
-        self.updateUrlField(self.Zoom, self.Latitude, self.Longitude)
-        self.updateDialogCoordinate(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmUrl(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmCoordinates(self.Zoom, self.Latitude, self.Longitude)
 
-    def onUrlChanged(self, url):
+    def onOsmUrlChanged(self, url):
         """Callback when the URL field has changed
 
         Args:
@@ -625,9 +630,9 @@ class _CommandImport:
             self.Latitude = latitude
             self.Longitude = longitude
         self.updateBrowserUrl(self.Zoom, self.Latitude, self.Longitude)
-        self.updateDialogCoordinate(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmCoordinates(self.Zoom, self.Latitude, self.Longitude)
         
-    def onZoomChanged(self,i):
+    def onOsmZoomChanged(self,i):
         """Callback when the Zoom field has changed
 
         NOTE: as this callback can be called from the direct change of the 
@@ -640,10 +645,10 @@ class _CommandImport:
         self.Zoom = int(i) if i else STD_ZOOM
         FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetInt("Zoom", self.Zoom)
         self.updateBrowserUrl(self.Zoom, self.Latitude, self.Longitude)
-        self.updateUrlField(self.Zoom, self.Latitude, self.Longitude)
-        self.updateDialogCoordinate(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmUrl(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmCoordinates(self.Zoom, self.Latitude, self.Longitude)
 
-    def onLatitudeChanged(self,d):
+    def onOsmLatitudeChanged(self,d):
         """Callback to set the Latitude
 
         NOTE: as this callback can be called from the direct change of the 
@@ -656,10 +661,10 @@ class _CommandImport:
         self.Latitude = d
         FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Latitude", self.Latitude)
         self.updateBrowserUrl(self.Zoom, self.Latitude, self.Longitude)
-        self.updateUrlField(self.Zoom, self.Latitude, self.Longitude)
-        self.updateDialogCoordinate(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmUrl(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmCoordinates(self.Zoom, self.Latitude, self.Longitude)
 
-    def onLongitudeChanged(self,d):
+    def onOsmLongitudeChanged(self,d):
         """Callback to set the Longitude
 
         NOTE: as this callback can be called from the direct change of the 
@@ -672,29 +677,32 @@ class _CommandImport:
         self.Longitude = d
         FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Longitude", self.Longitude)
         self.updateBrowserUrl(self.Zoom, self.Latitude, self.Longitude)
-        self.updateUrlField(self.Zoom, self.Latitude, self.Longitude)
-        self.updateDialogCoordinate(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmUrl(self.Zoom, self.Latitude, self.Longitude)
+        self.updateOsmCoordinates(self.Zoom, self.Latitude, self.Longitude)
+
+    def onCsvSelectFile(self):
+        pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
+        home_dir = os.path.expanduser('~')
+        csv_dirname = pref.GetString("LastCsvSelectDirname", home_dir)
+        if not os.path.isdir(csv_dirname):
+            csv_dirname = home_dir
+        csv_filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self.dialog, 
+            QT_TRANSLATE_NOOP("GeoData", "Open CSV"), 
+            csv_dirname,
+            QT_TRANSLATE_NOOP("GeoData", "CSV Files (*.csv *.tsv)")
+        )
+        pref.SetString("LastCsvSelectDirname", os.path.dirname(csv_filename))
 
     def onImport(self):
-        max_zoom_in_km = 0.1
-        min_zoom_in_km = 3.0
-        min_zoom = 15.0
-        zoom_in_km = min_zoom_in_km + (min_zoom - float(self.Zoom)) * (min_zoom_in_km - max_zoom_in_km)/min_zoom_in_km 
-        # geodat.import_osm.import_osm2(
-        #     self.Latitude,
-        #     self.Longitude,
-        #     zoom_in_km,
-        #     self.dialog.progressBar,
-        #     self.dialog.status,
-        #     self.dialog.downloadAltitude.isChecked())
         self.dialog.progressBar.setVisible(True)
         global GCP_ELEVATION_API_KEY
-        if self.dialog.downloadAltitude.isChecked() and not GCP_ELEVATION_API_KEY:
+        if self.dialog.osmDownloadAltitude.isChecked() and not GCP_ELEVATION_API_KEY:
             FreeCAD.Console.PrintWarning(f"Altitude information not available because no GCP API key provided.\n")
         import_osm(self.Latitude,
                    self.Longitude,
                    self.Zoom,
-                   GCP_ELEVATION_API_KEY and self.dialog.downloadAltitude.isChecked(),
+                   GCP_ELEVATION_API_KEY and self.dialog.osmDownloadAltitude.isChecked(),
                    self.dialog.progressBar,
                    self.dialog.status)
         self.dialog.progressBar.setVisible(False)
@@ -711,14 +719,14 @@ class _CommandImport:
         if self.Browser and self.Browser.url() != url:
             self.Browser.load(url)
 
-    def updateUrlField(self, zoom, latitude, longitude):
+    def updateOsmUrl(self, zoom, latitude, longitude):
         """Update both the browser URL and the URL field with the zoom, 
         latitude and longitude.
         """
         url = f"https://www.openstreetmap.org/#map={zoom}/{latitude}/{longitude}"
-        self.dialog.url.setText(url)
+        self.dialog.osmUrl.setText(url)
 
-    def updateDialogCoordinate(self, zoom, latitude, longitude):
+    def updateOsmCoordinates(self, zoom, latitude, longitude):
         """Update the dialog coordinate fields with the the zoom, latitude
         and longitude.
 
@@ -727,9 +735,9 @@ class _CommandImport:
             latitude (float): the latitude of the map
             longitude (float): the longitude of the map
         """
-        self.dialog.zoom.setValue(zoom)
-        self.dialog.latitude.setValue(latitude)
-        self.dialog.longitude.setValue(longitude)
+        self.dialog.osmZoom.setValue(zoom)
+        self.dialog.osmLatitude.setValue(latitude)
+        self.dialog.osmLongitude.setValue(longitude)
 
     def _extract_coordinate_from_url(self, url):
         pattern = re.compile(r'https?://www.openstreetmap.org/#map=(\d+)/([\d,.-]+)/([\d,.-]+)')
