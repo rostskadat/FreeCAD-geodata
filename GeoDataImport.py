@@ -111,14 +111,11 @@ def _download_from_osm(latitude, longitude, osm_zoom, cache_file):
         cache_dir = os.path.dirname(cache_file)
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
-
         FreeCAD.Console.PrintLog(f"Writing OSM data to {cache_file} ...\n")
         with open(cache_file, 'wb') as f:
             f.write(data)
-        return data.decode('utf-8')
-    
-    FreeCAD.Console.PrintWarning(f"Failed to download OSM data: {status_code}\n")
-    return None
+        return status_code, data.decode('utf-8')
+    return status_code, data
 
 def _get_altitude(latitude, longitude):
     """Returns the altitude of a single point with latitude and longitude
@@ -294,11 +291,15 @@ def import_osm(latitude, longitude, osm_zoom, download_altitude=False, progressB
     _set_status(status, "Downloading data from openstreetmap.org ...")
     cache_file = _get_cache_file(latitude, longitude, osm_zoom)
     if not os.path.exists(cache_file):
-        content = _download_from_osm(latitude, longitude, osm_zoom, cache_file)
+        status_code, content = _download_from_osm(latitude, longitude, osm_zoom, cache_file)
     else:
         FreeCAD.Console.PrintLog(f"Reading OSM data from cache '{cache_file}'...\n")
         with open(cache_file,"r", encoding='utf-8') as f:
             content = f.read()
+        status_code = 200
+    if status_code != 200:
+        _set_status(status, "Download failed. Increase the zoom.")
+        return
 
     _set_status(status, "Downloading altitude from googleapis ...")
     if download_altitude:
@@ -485,11 +486,13 @@ class _CommandImport:
         self.dialog.latitude.valueChanged.connect(self.onLatitudeChanged)
         self.dialog.longitude.valueChanged.connect(self.onLongitudeChanged)
         self.dialog.btnImport.clicked.connect(self.onImport)
+        self.dialog.btnClose.clicked.connect(self.onClose)
+        self.dialog.progressBar.setVisible(False)
 
         # restore window geometry from stored state
         pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
-        self.dialog.resize(pref.GetInt("WindowWidth", 800), pref.GetInt("WindowHeight", 600))
-        self.dialog.setWindowIcon(QtGui.QIcon(":/GeoData_Import.svg"))
+        #self.dialog.resize(pref.GetInt("WindowWidth", 800), pref.GetInt("WindowHeight", 600))
+        self.dialog.setWindowIcon(QtGui.QIcon(":Resources/icons/GeoData_Import.svg"))
 
         global GCP_ELEVATION_API_KEY
         GCP_ELEVATION_API_KEY = pref.GetString("GCP_ELEVATION_API_KEY")
@@ -684,6 +687,7 @@ class _CommandImport:
         #     self.dialog.progressBar,
         #     self.dialog.status,
         #     self.dialog.downloadAltitude.isChecked())
+        self.dialog.progressBar.setVisible(True)
         global GCP_ELEVATION_API_KEY
         if self.dialog.downloadAltitude.isChecked() and not GCP_ELEVATION_API_KEY:
             FreeCAD.Console.PrintWarning(f"Altitude information not available because no GCP API key provided.\n")
@@ -693,6 +697,11 @@ class _CommandImport:
                    GCP_ELEVATION_API_KEY and self.dialog.downloadAltitude.isChecked(),
                    self.dialog.progressBar,
                    self.dialog.status)
+        self.dialog.progressBar.setVisible(False)
+
+    def onClose(self):
+        FreeCAD.Console.PrintLog(f"Closing {self.dialog}\n")
+        self.dialog.done(0)
 
     def updateBrowserUrl(self, zoom, latitude, longitude):
         """Update both the browser URL and the URL field with the zoom, 
