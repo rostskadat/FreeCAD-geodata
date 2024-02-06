@@ -21,19 +21,18 @@ import re
 import time
 import FreeCAD
 import FreeCADGui
-import geodat
 from PySide2 import QtGui, QtCore, QtWidgets
 from pivy import coin
 import WebGui
 from NetworkManager import HAVE_QTNETWORK, InitializeNetworkManager
 from ConnectionChecker import ConnectionChecker
-import xmltodict
+import xml.etree.ElementTree as ET
 from geodat.transversmercator import TransverseMercator
 import geodat.inventortools as inventortools
 import Part
-from datetime import datetime
-import requests
-from math import cos, radians, pow
+from math import pow
+import urllib.request
+import urllib.parse
 
 if FreeCAD.GuiUp:
     import FreeCADGui
@@ -48,7 +47,7 @@ else:
     # \endcond
 
 API_MAX_RETRY = 4
-GCP_API_KEY = "AIzaSyCXbsFPJniFW-5WTe9R7sqghyvwlhh8lY8"
+GCP_ELEVATION_API_KEY = None
 GCP_ELEVATION_API_URL = "https://maps.googleapis.com/maps/api/elevation/json"
 OSM_API_URL = "https://www.openstreetmap.org/api/0.6/map"
 LIST_ELEMENTS = ('node', 'tag', 'way', 'nd', 'relation', 'member')
@@ -79,6 +78,24 @@ def _get_cache_file(latitude, longitude, osm_zoom):
     """
     return os.path.join(FreeCAD.ConfigGet("UserAppData"), "GeoData", f"{latitude}_{longitude}_{osm_zoom}")
 
+def _call_external_service(base_url, params):
+    if params:
+        url = f"{base_url}?{urllib.parse.urlencode(params)}"
+    else:
+        url = base_url    
+
+    status_code = 400
+    data = None
+    try:
+        with urllib.request.urlopen(url) as response:
+            status_code = response.getcode()
+            if status_code == 200:
+                data = response.read()
+    except urllib.error.URLError as e:
+        print(f"Error: {e}")
+    finally:
+        return status_code, data
+
 def _download_from_osm(latitude, longitude, osm_zoom, cache_file):
     delta_degree = 360 / pow(2, osm_zoom)
 
@@ -89,22 +106,18 @@ def _download_from_osm(latitude, longitude, osm_zoom, cache_file):
         "bbox": f"{longitude_1},{latitude_1},{longitude_2},{latitude_2}"
     }
     FreeCAD.Console.PrintLog(f"Downloading OSM data from {OSM_API_URL}, {params} ...\n")
-    response = requests.get(OSM_API_URL, params=params)
-    if response.status_code == 200:
+    status_code, data = _call_external_service(OSM_API_URL, params)
+    if status_code == 200:
         cache_dir = os.path.dirname(cache_file)
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
 
         FreeCAD.Console.PrintLog(f"Writing OSM data to {cache_file} ...\n")
-        buffer = BytesIO()
         with open(cache_file, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-                buffer.write(chunk)
-        buffer.seek(0)
-        return  TextIOWrapper(buffer, encoding='utf-8').read()
+            f.write(data)
+        return data.decode('utf-8')
     
-    FreeCAD.Console.PrintWarning(f"Failed to download OSM data: {response}\n")
+    FreeCAD.Console.PrintWarning(f"Failed to download OSM data: {status_code}\n")
     return None
 
 def _get_altitude(latitude, longitude):
@@ -117,15 +130,18 @@ def _get_altitude(latitude, longitude):
     Returns:
         float: the altitude
     """
+    if not GCP_ELEVATION_API_KEY:
+        FreeCAD.Console.PrintWarning(f"Altitude information not available. Specify a valid GCP_ELEVATION_API_KEY\n")
+        return 0
     retry = 0
     while retry < API_MAX_RETRY:
         params = {
             "locations":f"{latitude},{longitude}",
-            "key": GCP_API_KEY
+            "key": GCP_ELEVATION_API_KEY
         }
-        response = requests.get(GCP_ELEVATION_API_URL, params=params)
-        if response.status_code == 200:
-            payload = response.json()
+        status_code, data = (200, '{"status":"OK","results":[{"elevation":314}]}'.encode()) #_call_external_service(OSM_API_URL, params)
+        if status_code == 200:
+            payload = json.loads(data.decode('utf-8'))
             status = payload['status']
             if status == "OK":
                 # elevation is in meter
@@ -138,40 +154,36 @@ def _get_altitude(latitude, longitude):
                 break
     return 0
 
-def _get_altitudes(points):
+def _get_altitudes(osm_nodes):
     """Returns the altitude of a list of point (with latitude and longitude)
 
     Args:
-        points (list): the list of point (latitude, longitude)
+        osm_nodes (list): the list of point (latitude, longitude)
 
     Returns:
         dict: the dict of altitude by
     """
+    if not GCP_ELEVATION_API_KEY:
+        FreeCAD.Console.PrintWarning(f"Altitude information not available. Specify a valid GCP_ELEVATION_API_KEY\n")
+        return {}
+
     heights = {}
-    i=0
-    size=len(points)
-    while i<size:
-        # slice 20 by 20 "lat,long|..."
-        ii=0
-        if i>0:
-            time.sleep(1)
-        while ii < 20 and i < size:
-            p=points[i]
-            ss= p[1]+','+p[2] + '|'
-            url += ss
-            i += 1
-            ii += 1
+    chunk_size = 100 # 100 location at once...
+    chunks = [osm_nodes[i:i + chunk_size] for i in range(0, len(osm_nodes), chunk_size)]
+    for chunk in chunks:
+        locations = [ f"{osm_node.get('lat')},{osm_node.get('lon')}" for osm_node in chunk ]
         params = {
-            "locations": ss,
-            "key": GCP_API_KEY
+            "locations": '|'.join(locations),
+            "key": GCP_ELEVATION_API_KEY
         }
-        response = requests.get(GCP_ELEVATION_API_URL, params=params)
-        if response.status_code == 200:
-            payload = response.json()
+        status_code, data = _call_external_service(OSM_API_URL, params)
+        if status_code == 200:
+            payload = json.loads(data.decode('utf-8'))
             status = payload['status']
             if status == "OK":
                 # elevation is in meter
-                for r in res:
+                # TODO: Needs to match the lat and lon to the corresponding node
+                for r in payload['results']:
                     key="%0.7f" %(r['location']['lat']) + " " + "%0.7f" %(r['location']['lng'])
                     heights[key]=r['elevation']
             elif status == "OVER_QUERY_LIMIT":
@@ -182,14 +194,7 @@ def _get_altitudes(points):
                 break
     return heights
 
-def _setup_area(active_document, bounds):
-    minlat = float(bounds['@minlat'])
-    minlon = float(bounds['@minlon'])
-    maxlat = float(bounds['@maxlat'])
-    maxlon = float(bounds['@maxlon'])
-
-    FreeCAD.Console.PrintLog(f"@area p1=({minlat},{minlon}), p2=({maxlat},{maxlon})\n")
-
+def _setup_area(active_document, minlat, minlon, maxlat, maxlon):
     # NOTE: The downloaded are will not be squared...
     tm = TransverseMercator()
     (x1, y1) = tm.fromGeographic(minlat, minlon)
@@ -210,7 +215,6 @@ def _setup_light(active_document):
     root.insertChild(light, 0)
 
 def _setup_camera(active_document, osm_zoom):
-    height = 1000000
     height = 200*osm_zoom*10000/0.6
     camera_definition = """#Inventor V2.1 ascii
     OrthographicCamera {
@@ -227,7 +231,7 @@ def _setup_camera(active_document, osm_zoom):
     active_view = FreeCADGui.activeDocument().activeView()
     active_view.setCamera(camera_definition)
     active_view.setCameraType("Orthographic")
-    # FreeCADGui.SendMsgToActiveView("ViewFit")
+    FreeCADGui.SendMsgToActiveView("ViewFit")
 
 def _add_building(name, feature, building_height):
     extrusion = FreeCAD.ActiveDocument.addObject("Part::Extrusion",name)
@@ -261,12 +265,11 @@ def _add_landuse(name, feature, landuse):
     return extrusion
 
 def _add_highway(name, feature):
-    extrusion = FreeCAD.ActiveDocument.addObject("Part::Extrusion","highway")
+    extrusion = FreeCAD.ActiveDocument.addObject("Part::Extrusion", name)
     extrusion.Base = feature
     extrusion.ViewObject.LineColor = (0.00,.00,1.00)
     extrusion.ViewObject.LineWidth = 10
     extrusion.Dir = (0,0,0.2)
-    extrusion.Solid = True
     extrusion.Label = name
     return extrusion
 
@@ -287,40 +290,40 @@ def import_osm(latitude, longitude, osm_zoom, download_altitude=False, progressB
     #   between OSM zoom level and º in longitude / latitude
 
     _set_progress(progressBar, 0)
-    _set_status(status, "Downloading data from openstreetmap.org ...")
 
+    _set_status(status, "Downloading data from openstreetmap.org ...")
     cache_file = _get_cache_file(latitude, longitude, osm_zoom)
     if not os.path.exists(cache_file):
         content = _download_from_osm(latitude, longitude, osm_zoom, cache_file)
     else:
         FreeCAD.Console.PrintLog(f"Reading OSM data from cache '{cache_file}'...\n")
-        with open(cache_file,"r") as f:
+        with open(cache_file,"r", encoding='utf-8') as f:
             content = f.read()
 
-    if download_altitude:
-        FreeCAD.Console.PrintWarning(f"Download or Altitude is not implemented.\n")
-        download_altitude = False
-
+    _set_status(status, "Downloading altitude from googleapis ...")
     if download_altitude:
         base_altitude = _get_altitude(latitude, longitude)
     else:
         base_altitude = 0
 
     _set_status(status, "Parsing data ...")
-    tree = xmltodict.parse(content, force_list=LIST_ELEMENTS)['osm']
+    root = ET.fromstring(content)
 
-    _set_status(status, "Transform data ...")
+    _set_status(status, "Transforming data ...")
 
     # osm_nodes: a dict of OSM node w/ node id as key
-    osm_nodes = { node['@id']: node for node in tree['node'] }
+    osm_nodes = { node.get('id'): node for node in root.findall('node') }
+    osm_ways = list(root.findall('way'))
 
     # fc_points: map all nodes to xy-plane FC vector
     tm = TransverseMercator()
     (center_x, center_y) = tm.fromGeographic(latitude, longitude)
     def __to_fc_vector(node):
-        (x, y) = tm.fromGeographic(float(node['@lat']), float(node['@lon']))
+        (x, y) = tm.fromGeographic(float(node.get('lat')), float(node.get('lon')))
         return FreeCAD.Vector(x-center_x, y-center_y, 0.0)
-    fc_points = { node['@id']: __to_fc_vector(node) for node in tree['node'] }
+    fc_points = { id: __to_fc_vector(node) for id, node in osm_nodes.items() }
+
+    FreeCAD.Console.PrintLog(f"Found {len(osm_nodes.keys())} node(s) and {len(osm_ways)} way(s)...\n")
 
     _set_status(status, "Creating visualizations ...")
 
@@ -329,7 +332,8 @@ def import_osm(latitude, longitude, osm_zoom, download_altitude=False, progressB
     active_document = FreeCAD.ActiveDocument
 
     FreeCAD.Console.PrintLog("Setting up Area ...\n")
-    _setup_area(active_document, tree['bounds'])
+    bounds = root.find('bounds')
+    _setup_area(active_document, float(bounds.get('minlat')),float(bounds.get('minlon')),float(bounds.get('maxlat')),float(bounds.get('maxlon')))
 
     FreeCAD.Console.PrintLog("Setting up light ...\n")
     _setup_light(active_document)
@@ -343,16 +347,18 @@ def import_osm(latitude, longitude, osm_zoom, download_altitude=False, progressB
     building_group = active_document.addObject("App::DocumentObjectGroup","GRP_buildings")
     path_group = active_document.addObject("App::DocumentObjectGroup","GRP_paths")
 
-    way_count = len(tree['way'])
-    for i, way in enumerate(tree['way']):
+    way_count = len(osm_ways)
+    for i, way in enumerate(osm_ways):
+        way_id = way.get('id')
 
         _set_progress(progressBar, int(100.0*i/way_count))
 
-        # tags: get a hash of all tags for the current way
-        if 'tag' not in way: 
+        if not len(way.findall('tag')): 
+            FreeCAD.Console.PrintLog(f"Skipping untagged way {way_id} ...\n")
             continue
         
-        tags = { tag['@k']: tag['@v'] for tag in way['tag'] }
+        # tags: get a hash of all tags for the current way
+        tags = { tag.get('k'): tag.get('v') for tag in way.findall('tag') }
         building = tags.get('building', None)
         landuse = tags.get('landuse', None)
         highway = tags.get('highway', None)
@@ -370,20 +376,20 @@ def import_osm(latitude, longitude, osm_zoom, download_altitude=False, progressB
         if landuse:
             name = landuse.title()
         if highway:
-            name = f"{tags}"
+            name = tags.get('name', highway.title())
         if not name:
             name= f"{tags}"
 
         if download_altitude:
-            way_osm_nodes = [ osm_nodes[node['@ref']] for node in way['nd'] ]
+            way_osm_nodes = [ osm_nodes[node.get('ref')] for node in way.findall('nd') ]
             altitudes = _get_altitudes(way_osm_nodes)
 
-        way_fc_points = [ fc_points[node['@ref']] for node in way['nd'] ]
+        way_fc_points = [ fc_points[node.get('ref')] for node in way.findall('nd') ]
 
         polygon_fc_points = []
         for way_fc_point in way_fc_points:
             if download_altitude and building:
-                altitude = altitudes[way_fc_point['@lat']+' '+way_fc_point['@lon']]*1000 - base_altitude
+                altitude = altitudes[way_fc_point.get('lat')+' '+way_fc_point.get('lon')]*1000 - base_altitude
                 way_fc_point.z = altitude
             polygon_fc_points.append(way_fc_point)
 
@@ -391,7 +397,7 @@ def import_osm(latitude, longitude, osm_zoom, download_altitude=False, progressB
         polygon = Part.makePolygon(polygon_fc_points)
         Part.show(polygon)
         feature = active_document.ActiveObject
-        feature.Label = "w_"+way['@id']
+        feature.Label = f"w_{way_id}"
         feature.ViewObject.Visibility = False
         path_group.addObject(feature)
 
@@ -428,7 +434,6 @@ def import_osm(latitude, longitude, osm_zoom, download_altitude=False, progressB
 
     _set_status(status, "Successfully imported OSM data.")
     _set_progress(progressBar, 100)
-
 
 # Greenwich
 STD_ZOOM = 17
@@ -485,6 +490,9 @@ class _CommandImport:
         pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
         self.dialog.resize(pref.GetInt("WindowWidth", 800), pref.GetInt("WindowHeight", 600))
         self.dialog.setWindowIcon(QtGui.QIcon(":/GeoData_Import.svg"))
+
+        global GCP_ELEVATION_API_KEY
+        GCP_ELEVATION_API_KEY = pref.GetString("GCP_ELEVATION_API_KEY")
 
         self.dialog.locationPresets.addItem(QT_TRANSLATE_NOOP("GeoData", "Select a location ..."))
         self.LocationPresets = []
@@ -564,7 +572,6 @@ class _CommandImport:
             self.Zoom = int(self.LocationPreset['zoom'])
             self.Latitude = float(self.LocationPreset['latitude'])
             self.Longitude = float(self.LocationPreset['longitude'])
-        self.onOpenBrowserWindow()
         self.updateBrowserUrl(self.Zoom, self.Latitude, self.Longitude)
         self.updateUrlField(self.Zoom, self.Latitude, self.Longitude)
         self.updateDialogCoordinate(self.Zoom, self.Latitude, self.Longitude)
@@ -614,7 +621,6 @@ class _CommandImport:
             self.Zoom = zoom
             self.Latitude = latitude
             self.Longitude = longitude
-        self.onOpenBrowserWindow()
         self.updateBrowserUrl(self.Zoom, self.Latitude, self.Longitude)
         self.updateDialogCoordinate(self.Zoom, self.Latitude, self.Longitude)
         
@@ -678,11 +684,13 @@ class _CommandImport:
         #     self.dialog.progressBar,
         #     self.dialog.status,
         #     self.dialog.downloadAltitude.isChecked())
-        
+        global GCP_ELEVATION_API_KEY
+        if self.dialog.downloadAltitude.isChecked() and not GCP_ELEVATION_API_KEY:
+            FreeCAD.Console.PrintWarning(f"Altitude information not available because no GCP API key provided.\n")
         import_osm(self.Latitude,
                    self.Longitude,
                    self.Zoom,
-                   self.dialog.downloadAltitude.isChecked(),
+                   GCP_ELEVATION_API_KEY and self.dialog.downloadAltitude.isChecked(),
                    self.dialog.progressBar,
                    self.dialog.status)
 
@@ -691,7 +699,7 @@ class _CommandImport:
         latitude and longitude.
         """
         url = f"https://www.openstreetmap.org/#map={zoom}/{latitude}/{longitude}"
-        if self.Browser.url() != url:
+        if self.Browser and self.Browser.url() != url:
             self.Browser.load(url)
 
     def updateUrlField(self, zoom, latitude, longitude):
