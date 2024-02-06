@@ -54,11 +54,13 @@ class GeoDataWorkbench(FreeCADGui.Workbench):
             return text
 
         __dirname__ = os.path.join(FreeCAD.getResourceDir(), "Mod", "FreeCAD-geodata")
-        __dirname__ = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "FreeCAD-geodata")
+        if not os.path.isdir(__dirname__):
+            __dirname__ = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "FreeCAD-geodata")
+        if not os.path.isdir(__dirname__):
+            FreeCAD.Console.PrintError("Failed to determine the install location of the GeoData workbench. Check your installation.\n")
         _tooltip = ("The GeoData workbench is used to import GeoData materials")
-        self.__class__.Icon = os.path.join(__dirname__,
-                                           "Resources", "icons",
-                                           "GeoDataWorkbench.svg")
+        self.__class__.ResourceDir = os.path.join(__dirname__, "Resources")
+        self.__class__.Icon = os.path.join(self.ResourceDir, "icons", "GeoDataWorkbench.svg")
         self.__class__.MenuText = QT_TRANSLATE_NOOP("GeoData", "GeoData")
         self.__class__.ToolTip = QT_TRANSLATE_NOOP("GeoData", _tooltip)
         self.__class__.Version = "0.0.1"
@@ -101,15 +103,12 @@ class GeoDataWorkbench(FreeCADGui.Workbench):
         # if hasattr(FreeCADGui, "Snapper"):
         #     FreeCADGui.Snapper.show()
         import importlib
-        import GeoData, GeoDataImport
-        importlib.reload(GeoData)
-        importlib.reload(GeoDataImport)
+        modules = [module for name,module in sys.modules.items() if 'GeoData' in name]
+        list(map(lambda module: importlib.reload(module), modules))
         FreeCAD.Console.PrintLog("GeoData workbench activated.\n")
 
     def Deactivated(self):
         """When leaving the workbench."""
-        # if hasattr(FreeCADGui, "Snapper"):
-        #     FreeCADGui.Snapper.hide()
         FreeCAD.Console.PrintLog("GeoData workbench deactivated.\n")
 
     # def ContextMenu(self, recipient):

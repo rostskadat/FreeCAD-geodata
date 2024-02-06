@@ -1,0 +1,47 @@
+{
+    "osm": [
+        {
+            "name": "Sonneberg Neufang observatorium",
+            "latitude": 50.3736049,
+            "longitude": 11.191643,
+            "zoom": 17
+        },
+        {
+            "name": "Coburg university and school",
+            "latitude": 50.2631171,
+            "longitude": 10.9483,
+            "zoom": 17
+        },
+        {
+            "name": "Berlin Alexanderplatz/Haus des Lehrers",
+            "latitude": 52.52128,
+            "longitude": 13.41646,
+            "zoom": 17
+        },
+        {
+            "name": "Berlin Spandau",
+            "latitude": 52.508,
+            "longitude": 13.18,
+            "zoom": 17
+        },
+        {
+            "name": "Paris Rue de Seine",
+            "latitude": 48.85167,
+            "longitude": 2.33669,
+            "zoom": 17
+        },
+        {
+            "name": "Tokyo near tower",
+            "latitude": 35.65905,
+            "longitude": 139.74991,
+            "zoom": 17
+        },
+        {
+            "name": "Zaragoza, Spain",
+            "latitude": 41.64119,
+            "longitude": -0.92397,
+            "zoom": 17
+        }
+        
+    ]
+}

@@ -10,11 +10,23 @@
     <height>480</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>640</width>
+    <height>480</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>Import Geo Data</string>
   </property>
   <property name="toolTip">
    <string>Import Geo Data from different sources</string>
+  </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
+  </property>
+  <property name="modal">
+   <bool>false</bool>
   </property>
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">
@@ -22,7 +34,7 @@
      <x>10</x>
      <y>10</y>
      <width>621</width>
-     <height>391</height>
+     <height>331</height>
     </rect>
    </property>
    <property name="currentIndex">
@@ -31,8 +43,8 @@
    <widget class="QWidget" name="tabOSM">
     <property name="maximumSize">
      <size>
-      <width>295</width>
-      <height>205</height>
+      <width>600</width>
+      <height>480</height>
      </size>
     </property>
     <property name="toolTip">
@@ -47,8 +59,35 @@
     <layout class="QFormLayout" name="formLayout_2">
      <item row="0" column="0" colspan="2">
       <layout class="QFormLayout" name="formLayout">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetDefaultConstraint</enum>
+       </property>
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
+       <property name="rowWrapPolicy">
+        <enum>QFormLayout::DontWrapRows</enum>
+       </property>
+       <property name="labelAlignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
        <property name="formAlignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
+       <property name="horizontalSpacing">
+        <number>10</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="label">
@@ -61,6 +100,13 @@
         <widget class="QComboBox" name="locationPresets">
          <property name="toolTip">
           <string>Select a preset from the list</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>or</string>
          </property>
         </widget>
        </item>
@@ -79,12 +125,22 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QPushButton" name="openBrowser">
+          <widget class="QPushButton" name="btnOpenBrowserWindow">
            <property name="toolTip">
             <string>Open OpenStreeMap in a browser</string>
            </property>
            <property name="text">
             <string>Show Browser</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnGetCoordFromBrowser">
+           <property name="toolTip">
+            <string>Get the URL of the open browser tab</string>
+           </property>
+           <property name="text">
+            <string>Get Coordinates</string>
            </property>
           </widget>
          </item>
@@ -103,118 +159,165 @@
          </item>
         </layout>
        </item>
-       <item row="2" column="1">
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QLineEdit" name="lineEdit">
-           <property name="toolTip">
-            <string>Copy an URL</string>
-           </property>
-           <property name="whatsThis">
-            <string>copy an URL</string>
-           </property>
-           <property name="accessibleDescription">
-            <string>copy an URL</string>
-           </property>
-           <property name="inputMask">
-            <string/>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="placeholderText">
-            <string>https://www.openstreetmap.org/</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>or</string>
+         </property>
+        </widget>
        </item>
-       <item row="3" column="0">
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="url">
+         <property name="toolTip">
+          <string>Copy an OSM URL</string>
+         </property>
+         <property name="whatsThis">
+          <string>The OSM map URL to download</string>
+         </property>
+         <property name="accessibleDescription">
+          <string>The OSM map URL to download</string>
+         </property>
+         <property name="placeholderText">
+          <string>https://www.openstreetmap.org</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
           <string>Latitude</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="latitue"/>
-       </item>
-       <item row="4" column="0">
+       <item row="6" column="0">
         <widget class="QLabel" name="label_3">
          <property name="text">
           <string>Longitude</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
-        <widget class="QLineEdit" name="longitude"/>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>Area Radius</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QSlider" name="horizontalSlider">
-         <property name="toolTip">
-          <string>Radius of the area to download</string>
-         </property>
-         <property name="minimum">
-          <number>100</number>
-         </property>
-         <property name="maximum">
-          <number>4000</number>
-         </property>
-         <property name="singleStep">
-          <number>100</number>
-         </property>
-         <property name="pageStep">
-          <number>500</number>
-         </property>
-         <property name="value">
-          <number>500</number>
-         </property>
-         <property name="tracking">
-          <bool>true</bool>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="tickPosition">
-          <enum>QSlider::TicksBelow</enum>
-         </property>
-         <property name="tickInterval">
-          <number>500</number>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>Altitude</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1">
+       <item row="9" column="1">
         <widget class="QCheckBox" name="downloadAltitude">
          <property name="text">
           <string>Download Altitude</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_5">
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_6">
          <property name="text">
-          <string>or</string>
+          <string>Zoom</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>or</string>
+       <item row="3" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>15</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="zoom">
+           <property name="toolTip">
+            <string>Radius of the area to download</string>
+           </property>
+           <property name="minimum">
+            <number>15</number>
+           </property>
+           <property name="maximum">
+            <number>19</number>
+           </property>
+           <property name="singleStep">
+            <number>1</number>
+           </property>
+           <property name="pageStep">
+            <number>1</number>
+           </property>
+           <property name="value">
+            <number>17</number>
+           </property>
+           <property name="tracking">
+            <bool>true</bool>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="invertedAppearance">
+            <bool>false</bool>
+           </property>
+           <property name="invertedControls">
+            <bool>true</bool>
+           </property>
+           <property name="tickPosition">
+            <enum>QSlider::TicksBelow</enum>
+           </property>
+           <property name="tickInterval">
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>19</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="5" column="1">
+        <widget class="QDoubleSpinBox" name="latitude">
+         <property name="toolTip">
+          <string>The latitude</string>
+         </property>
+         <property name="suffix">
+          <string> º</string>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="minimum">
+          <double>-90.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>90.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.000000000000000</double>
+         </property>
+         <property name="stepType">
+          <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+         </property>
+         <property name="value">
+          <double>0.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QDoubleSpinBox" name="longitude">
+         <property name="toolTip">
+          <string>The longitude</string>
+         </property>
+         <property name="wrapping">
+          <bool>true</bool>
+         </property>
+         <property name="suffix">
+          <string> º</string>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="minimum">
+          <double>-180.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>180.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -263,11 +366,11 @@
     </attribute>
    </widget>
   </widget>
-  <widget class="QPushButton" name="buttonImport">
+  <widget class="QPushButton" name="btnImport">
    <property name="geometry">
     <rect>
      <x>550</x>
-     <y>450</y>
+     <y>420</y>
      <width>81</width>
      <height>23</height>
     </rect>
@@ -283,13 +386,32 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>420</y>
-     <width>621</width>
+     <y>350</y>
+     <width>620</width>
      <height>21</height>
     </rect>
    </property>
    <property name="value">
-    <number>24</number>
+    <number>0</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="status">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>380</y>
+     <width>620</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="text">
+    <string>Status</string>
    </property>
   </widget>
   <action name="actionImport">
@@ -300,4 +422,21 @@
  </widget>
  <resources/>
  <connections/>
+ <designerdata>
+  <property name="gridDeltaX">
+   <number>10</number>
+  </property>
+  <property name="gridDeltaY">
+   <number>10</number>
+  </property>
+  <property name="gridSnapX">
+   <bool>true</bool>
+  </property>
+  <property name="gridSnapY">
+   <bool>true</bool>
+  </property>
+  <property name="gridVisible">
+   <bool>true</bool>
+  </property>
+ </designerdata>
 </ui>
