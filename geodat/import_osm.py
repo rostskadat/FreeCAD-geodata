@@ -24,7 +24,7 @@ if sys.version_info[0] !=2:
 	from importlib import reload
 	import urllib.request
 
-from say import *
+#from say import *
 
 import time, json, os
 

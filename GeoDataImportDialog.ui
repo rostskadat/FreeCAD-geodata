@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>342</width>
-    <height>401</height>
+    <width>580</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -29,7 +29,7 @@
    <locale language="English" country="UnitedStates"/>
   </property>
   <property name="sizeGripEnabled">
-   <bool>false</bool>
+   <bool>true</bool>
   </property>
   <property name="modal">
    <bool>false</bool>
@@ -43,15 +43,8 @@
         <number>1</number>
        </property>
        <widget class="QWidget" name="tabOSM">
-        <property name="maximumSize">
-         <size>
-          <width>600</width>
-          <height>480</height>
-         </size>
-        </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open the OpenStreetMap
-                        import tab&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>Import Geo Data from OpenStreetMap</string>
         </property>
         <property name="toolTipDuration">
          <number>4</number>
@@ -130,7 +123,8 @@
              <item>
               <widget class="QPushButton" name="osmOpenBrowserWindow">
                <property name="toolTip">
-                <string>Open OpenStreeMap in a browser</string>
+                <string>Open OpenStreeMap in a
+                                  browser</string>
                </property>
                <property name="text">
                 <string>Show Browser</string>
@@ -138,9 +132,26 @@
               </widget>
              </item>
              <item>
+              <spacer name="horizontalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>10</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
               <widget class="QPushButton" name="osmGetCoordFromBrowser">
                <property name="toolTip">
-                <string>Get the URL of the open browser tab</string>
+                <string>Get the URL of the open
+                                  browser tab</string>
                </property>
                <property name="text">
                 <string>Get Coordinates</string>
@@ -213,7 +224,8 @@
              <item>
               <widget class="QSlider" name="osmZoom">
                <property name="toolTip">
-                <string>Radius of the area to download</string>
+                <string>Radius of the area to
+                                  download</string>
                </property>
                <property name="minimum">
                 <number>15</number>
@@ -284,10 +296,10 @@
               <double>90.000000000000000</double>
              </property>
              <property name="singleStep">
-              <double>0.000000000000000</double>
+              <double>1.000000000000000</double>
              </property>
              <property name="stepType">
-              <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+              <enum>QAbstractSpinBox::DefaultStepType</enum>
              </property>
              <property name="value">
               <double>0.000000000000000</double>
@@ -335,105 +347,191 @@
         </layout>
        </widget>
        <widget class="QWidget" name="tabCSV">
+        <property name="toolTip">
+         <string>Import Geo Data from a CSV file</string>
+        </property>
+        <property name="toolTipDuration">
+         <number>4</number>
+        </property>
         <attribute name="title">
          <string>CSV</string>
         </attribute>
-        <widget class="QWidget" name="formLayoutWidget">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>10</y>
-           <width>305</width>
-           <height>266</height>
-          </rect>
-         </property>
-         <layout class="QFormLayout" name="formLayout_2">
-          <property name="labelAlignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="horizontalSpacing">
-           <number>15</number>
-          </property>
-          <property name="verticalSpacing">
-           <number>15</number>
-          </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_9">
-            <property name="text">
-             <string>CSV File</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_4">
-            <item>
-             <widget class="QLineEdit" name="csvFilename">
-              <property name="toolTip">
-               <string>Select the CSV file to import</string>
-              </property>
-              <property name="readOnly">
-               <bool>true</bool>
-              </property>
-              <property name="placeholderText">
-               <string>Select a CSV file to import</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="csvSelectFile">
-              <property name="toolTip">
-               <string>Select a CSV file to import</string>
-              </property>
-              <property name="text">
-               <string>Open...</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_10">
-            <property name="text">
-             <string>or</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QPlainTextEdit" name="csvContent">
-            <property name="documentTitle">
-             <string>Copy &amp; Paste CSV data</string>
-            </property>
-            <property name="placeholderText">
-             <string>Copy &amp; Paste CSV data (lat;lon;...)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
-            <item>
-             <widget class="QCheckBox" name="csvHasHeaders">
-              <property name="text">
-               <string>CSV file has headers</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <layout class="QFormLayout" name="formLayout_2">
+           <property name="sizeConstraint">
+            <enum>QLayout::SetDefaultConstraint</enum>
+           </property>
+           <property name="fieldGrowthPolicy">
+            <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+           </property>
+           <property name="rowWrapPolicy">
+            <enum>QFormLayout::DontWrapRows</enum>
+           </property>
+           <property name="labelAlignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="formAlignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           </property>
+           <property name="horizontalSpacing">
+            <number>15</number>
+           </property>
+           <property name="verticalSpacing">
+            <number>15</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>15</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>CSV File</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <item>
+              <widget class="QLineEdit" name="csvFilename">
+               <property name="toolTip">
+                <string>Select the CSV file to import</string>
+               </property>
+               <property name="readOnly">
+                <bool>false</bool>
+               </property>
+               <property name="placeholderText">
+                <string>Select a CSV file to import</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="csvSelectFile">
+               <property name="toolTip">
+                <string>Select a CSV file to import</string>
+               </property>
+               <property name="text">
+                <string>Open...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>or</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QPlainTextEdit" name="csvContent">
+             <property name="documentTitle">
+              <string>Copy &amp; Paste CSV data</string>
+             </property>
+             <property name="placeholderText">
+              <string>Copy &amp; Paste CSV data (lat;lon;...)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <item>
+              <widget class="QCheckBox" name="csvHasHeaders">
+               <property name="text">
+                <string>CSV file has headers</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>Latitude</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QDoubleSpinBox" name="csvLatitude">
+             <property name="suffix">
+              <string> º</string>
+             </property>
+             <property name="decimals">
+              <number>4</number>
+             </property>
+             <property name="minimum">
+              <double>-90.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>90.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>1.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_12">
+             <property name="text">
+              <string>Longitude</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QDoubleSpinBox" name="csvLongitude">
+             <property name="suffix">
+              <string> º</string>
+             </property>
+             <property name="decimals">
+              <number>4</number>
+             </property>
+             <property name="minimum">
+              <double>-180.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>180.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>Origin:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </widget>
        <widget class="QWidget" name="tabXYZ">
         <attribute name="title">
