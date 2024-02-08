@@ -26,7 +26,6 @@ __author__ = "Thomas Gundermann"
 __url__ = "http://www.freecadbuch.de"
 __vers__ ="py3.01"
 
-import os
 import FreeCAD
 import FreeCADGui
 
@@ -43,4 +42,4 @@ if FreeCAD.GuiUp:
 	import FreeCADGui
 	FreeCADGui.updateLocale()
 
-from GeoDataImport import *
+from GeoData_Import import *

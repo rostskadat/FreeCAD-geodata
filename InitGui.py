@@ -60,7 +60,7 @@ class GeoDataWorkbench(FreeCADGui.Workbench):
             FreeCAD.Console.PrintError("Failed to determine the install location of the GeoData workbench. Check your installation.\n")
         _tooltip = ("The GeoData workbench is used to import GeoData materials")
         self.__class__.ResourceDir = os.path.join(__dirname__, "Resources")
-        self.__class__.Icon = os.path.join(self.ResourceDir, "icons", "GeoDataWorkbench.svg")
+        self.__class__.Icon = os.path.join(self.ResourceDir, "icons", "GeoData_Workbench.svg")
         self.__class__.MenuText = QT_TRANSLATE_NOOP("GeoData", "GeoData")
         self.__class__.ToolTip = QT_TRANSLATE_NOOP("GeoData", _tooltip)
         self.__class__.Version = "0.0.1"
@@ -121,3 +121,21 @@ class GeoDataWorkbench(FreeCADGui.Workbench):
 
 
 FreeCADGui.addWorkbench(GeoDataWorkbench)
+
+from Init import *
+if FreeCAD.GuiUp:
+    FreeCADGui.addCommand('My_Test Geodat'        ,MyTestCmd2())
+    FreeCADGui.addCommand('Import OSM Map', mydialog())
+    FreeCADGui.addCommand('Import CSV', import_csv())
+    FreeCADGui.addCommand('Import GPX', import_gpx())
+    FreeCADGui.addCommand('Import Heights', importheights())
+    FreeCADGui.addCommand('Import SRTM', importsrtm())
+    FreeCADGui.addCommand('Import XYZ', import_xyz())
+    FreeCADGui.addCommand('Import LatLonZ', import_latlony())
+    FreeCADGui.addCommand('Import Image', import_image())
+    FreeCADGui.addCommand('Import ASTER', import_aster())
+    FreeCADGui.addCommand('Import LIDAR', import_lidar())
+    FreeCADGui.addCommand('Create House', createHouse())
+    FreeCADGui.addCommand('Navigator', navigator())
+    FreeCADGui.addCommand('ElevationGrid', ElevationGrid())
+    FreeCADGui.addCommand('Import EMIR', import_emir())

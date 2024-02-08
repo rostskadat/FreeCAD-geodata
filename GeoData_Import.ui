@@ -40,7 +40,7 @@
      <item>
       <widget class="QTabWidget" name="tabs">
        <property name="currentIndex">
-        <number>1</number>
+        <number>8</number>
        </property>
        <widget class="QWidget" name="tabOSM">
         <property name="toolTip">
@@ -55,20 +55,8 @@
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <layout class="QFormLayout" name="formLayout">
-           <property name="sizeConstraint">
-            <enum>QLayout::SetDefaultConstraint</enum>
-           </property>
-           <property name="fieldGrowthPolicy">
-            <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-           </property>
-           <property name="rowWrapPolicy">
-            <enum>QFormLayout::DontWrapRows</enum>
-           </property>
            <property name="labelAlignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="formAlignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
            </property>
            <property name="horizontalSpacing">
             <number>15</number>
@@ -76,14 +64,8 @@
            <property name="verticalSpacing">
             <number>15</number>
            </property>
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
+           <property name="bottomMargin">
+            <number>15</number>
            </property>
            <item row="0" column="0">
             <widget class="QLabel" name="label">
@@ -95,7 +77,7 @@
            <item row="0" column="1">
             <widget class="QComboBox" name="osmLocationPresets">
              <property name="toolTip">
-              <string>Select a preset from the list</string>
+              <string>Select a location from the list</string>
              </property>
             </widget>
            </item>
@@ -123,8 +105,7 @@
              <item>
               <widget class="QPushButton" name="osmOpenBrowserWindow">
                <property name="toolTip">
-                <string>Open OpenStreeMap in a
-                                  browser</string>
+                <string>Open OpenStreeMap in a browser</string>
                </property>
                <property name="text">
                 <string>Show Browser</string>
@@ -150,8 +131,7 @@
              <item>
               <widget class="QPushButton" name="osmGetCoordFromBrowser">
                <property name="toolTip">
-                <string>Get the URL of the open
-                                  browser tab</string>
+                <string>Get the URL of the open browser tab</string>
                </property>
                <property name="text">
                 <string>Get Coordinates</string>
@@ -224,8 +204,7 @@
              <item>
               <widget class="QSlider" name="osmZoom">
                <property name="toolTip">
-                <string>Radius of the area to
-                                  download</string>
+                <string>OSM zoom as a proxy of the area to download</string>
                </property>
                <property name="minimum">
                 <number>15</number>
@@ -281,7 +260,7 @@
            <item row="4" column="1">
             <widget class="QDoubleSpinBox" name="osmLatitude">
              <property name="toolTip">
-              <string>The latitude</string>
+              <string>The latitude of the area to download</string>
              </property>
              <property name="suffix">
               <string> º</string>
@@ -295,15 +274,6 @@
              <property name="maximum">
               <double>90.000000000000000</double>
              </property>
-             <property name="singleStep">
-              <double>1.000000000000000</double>
-             </property>
-             <property name="stepType">
-              <enum>QAbstractSpinBox::DefaultStepType</enum>
-             </property>
-             <property name="value">
-              <double>0.000000000000000</double>
-             </property>
             </widget>
            </item>
            <item row="5" column="0">
@@ -316,7 +286,7 @@
            <item row="5" column="1">
             <widget class="QDoubleSpinBox" name="osmLongitude">
              <property name="toolTip">
-              <string>The longitude</string>
+              <string>The longitude of the area to download</string>
              </property>
              <property name="wrapping">
               <bool>true</bool>
@@ -337,6 +307,9 @@
            </item>
            <item row="6" column="1">
             <widget class="QCheckBox" name="osmDownloadAltitude">
+             <property name="toolTip">
+              <string>Whether to download altitude information</string>
+             </property>
              <property name="text">
               <string>Download Altitude</string>
              </property>
@@ -359,20 +332,8 @@
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <layout class="QFormLayout" name="formLayout_2">
-           <property name="sizeConstraint">
-            <enum>QLayout::SetDefaultConstraint</enum>
-           </property>
-           <property name="fieldGrowthPolicy">
-            <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-           </property>
-           <property name="rowWrapPolicy">
-            <enum>QFormLayout::DontWrapRows</enum>
-           </property>
            <property name="labelAlignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="formAlignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
            </property>
            <property name="horizontalSpacing">
             <number>15</number>
@@ -380,34 +341,84 @@
            <property name="verticalSpacing">
             <number>15</number>
            </property>
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
            <property name="bottomMargin">
             <number>15</number>
            </property>
            <item row="0" column="0">
-            <widget class="QLabel" name="label_9">
+            <widget class="QLabel" name="label_13">
              <property name="text">
-              <string>CSV File</string>
+              <string>Origin:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>Latitude</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="csvLatitude">
+             <property name="toolTip">
+              <string>The latitude of the origin of the CSV data</string>
+             </property>
+             <property name="suffix">
+              <string> º</string>
+             </property>
+             <property name="decimals">
+              <number>4</number>
+             </property>
+             <property name="minimum">
+              <double>-90.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>90.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_12">
+             <property name="text">
+              <string>Longitude</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="csvLongitude">
+             <property name="toolTip">
+              <string>The longitude of the origin of the CSV data</string>
+             </property>
+             <property name="suffix">
+              <string> º</string>
+             </property>
+             <property name="decimals">
+              <number>4</number>
+             </property>
+             <property name="minimum">
+              <double>-180.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>180.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>then</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
             <layout class="QHBoxLayout" name="horizontalLayout_4">
              <item>
               <widget class="QLineEdit" name="csvFilename">
                <property name="toolTip">
-                <string>Select the CSV file to import</string>
-               </property>
-               <property name="readOnly">
-                <bool>false</bool>
+                <string>Select a CSV file to import</string>
                </property>
                <property name="placeholderText">
                 <string>Select a CSV file to import</string>
@@ -429,15 +440,18 @@
              </item>
             </layout>
            </item>
-           <item row="1" column="0">
+           <item row="4" column="0">
             <widget class="QLabel" name="label_10">
              <property name="text">
               <string>or</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
+           <item row="4" column="1">
             <widget class="QPlainTextEdit" name="csvContent">
+             <property name="toolTip">
+              <string>Enter the raw CSV dat to import</string>
+             </property>
              <property name="documentTitle">
               <string>Copy &amp; Paste CSV data</string>
              </property>
@@ -446,10 +460,13 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
+           <item row="5" column="1">
             <layout class="QHBoxLayout" name="horizontalLayout_5">
              <item>
               <widget class="QCheckBox" name="csvHasHeaders">
+               <property name="toolTip">
+                <string>Whether the CSV data has headers</string>
+               </property>
                <property name="text">
                 <string>CSV file has headers</string>
                </property>
@@ -470,15 +487,54 @@
              </item>
             </layout>
            </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_11">
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabGPX">
+        <property name="toolTip">
+         <string>Import Geo Data from a GPX file</string>
+        </property>
+        <property name="toolTipDuration">
+         <number>4</number>
+        </property>
+        <attribute name="title">
+         <string>GPX</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <layout class="QFormLayout" name="formLayout_3">
+           <property name="labelAlignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="horizontalSpacing">
+            <number>15</number>
+           </property>
+           <property name="verticalSpacing">
+            <number>15</number>
+           </property>
+           <property name="bottomMargin">
+            <number>15</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>Origin:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_15">
              <property name="text">
               <string>Latitude</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
-            <widget class="QDoubleSpinBox" name="csvLatitude">
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="gpxLatitude">
+             <property name="toolTip">
+              <string>The latitude of the origin of the GPX data</string>
+             </property>
              <property name="suffix">
               <string> º</string>
              </property>
@@ -491,20 +547,20 @@
              <property name="maximum">
               <double>90.000000000000000</double>
              </property>
-             <property name="singleStep">
-              <double>1.000000000000000</double>
-             </property>
             </widget>
            </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="label_12">
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_16">
              <property name="text">
               <string>Longitude</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="1">
-            <widget class="QDoubleSpinBox" name="csvLongitude">
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="gpxLongitude">
+             <property name="toolTip">
+              <string>The longitude of the origin of the GPX data</string>
+             </property>
              <property name="suffix">
               <string> º</string>
              </property>
@@ -520,12 +576,66 @@
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QLabel" name="label_13">
+            <widget class="QLabel" name="label_18">
              <property name="text">
-              <string>Origin:</string>
+              <string>Altitude</string>
              </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QSpinBox" name="gpxAltitude">
+             <property name="toolTip">
+              <string>The altitude of the origin of the GPX data</string>
+             </property>
+             <property name="suffix">
+              <string> m</string>
+             </property>
+             <property name="minimum">
+              <number>-99999</number>
+             </property>
+             <property name="maximum">
+              <number>99999</number>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_17">
+             <property name="text">
+              <string>then</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <item>
+              <widget class="QLineEdit" name="gpxFilename">
+               <property name="toolTip">
+                <string>Select a GPX file to import</string>
+               </property>
+               <property name="placeholderText">
+                <string>Select a GPX file to import</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="gpxSelectFile">
+               <property name="toolTip">
+                <string>Select a GPX file to import</string>
+               </property>
+               <property name="text">
+                <string>Open...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="5" column="1">
+            <widget class="QCheckBox" name="gpxGenerateDataNodes">
+             <property name="text">
+              <string>Generate Data Nodes</string>
              </property>
             </widget>
            </item>
@@ -539,18 +649,71 @@
         </attribute>
        </widget>
        <widget class="QWidget" name="tabEMIR">
+        <property name="toolTip">
+         <string>Import Geo Data from an EMIR file</string>
+        </property>
+        <property name="toolTipDuration">
+         <number>4</number>
+        </property>
         <attribute name="title">
          <string>EMIR</string>
         </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <layout class="QFormLayout" name="formLayout_3">
+           <property name="labelAlignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="horizontalSpacing">
+            <number>15</number>
+           </property>
+           <property name="verticalSpacing">
+            <number>15</number>
+           </property>
+           <property name="bottomMargin">
+            <number>15</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_19">
+             <property name="text">
+              <string>Select</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <item>
+              <widget class="QLineEdit" name="emirFilename">
+               <property name="toolTip">
+                <string>Select an EMIR file to import</string>
+               </property>
+               <property name="placeholderText">
+                <string>Select an EMIR file to import</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="emirSelectFile">
+               <property name="toolTip">
+                <string>Select an EMIR file to import</string>
+               </property>
+               <property name="text">
+                <string>Open...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </widget>
        <widget class="QWidget" name="tabImage">
         <attribute name="title">
          <string>Image</string>
-        </attribute>
-       </widget>
-       <widget class="QWidget" name="tabGPX">
-        <attribute name="title">
-         <string>GPX</string>
         </attribute>
        </widget>
        <widget class="QWidget" name="tabLatLonY">
@@ -564,9 +727,81 @@
         </attribute>
        </widget>
        <widget class="QWidget" name="tabLidar">
+        <property name="toolTip">
+         <string>Import Geo Data from a Lidar file</string>
+        </property>
+        <property name="toolTipDuration">
+         <number>4</number>
+        </property>
         <attribute name="title">
          <string>Lidar</string>
         </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <layout class="QFormLayout" name="formLayout_2">
+           <property name="labelAlignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="horizontalSpacing">
+            <number>15</number>
+           </property>
+           <property name="verticalSpacing">
+            <number>15</number>
+           </property>
+           <property name="bottomMargin">
+            <number>15</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_20">
+             <property name="text">
+              <string>Select</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <widget class="QLineEdit" name="lidarFilename">
+               <property name="toolTip">
+                <string>Select a LIDAR file to import</string>
+               </property>
+               <property name="placeholderText">
+                <string>Select a LIDAR file to import</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="lidarSelectFile">
+               <property name="toolTip">
+                <string>Select an EMIR file to import</string>
+               </property>
+               <property name="text">
+                <string>Open...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="1">
+            <widget class="QCheckBox" name="checkBox">
+             <property name="text">
+              <string>Use data origin</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QCheckBox" name="lidarCreatePointsCloud">
+             <property name="text">
+              <string>Create point cloud</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </widget>
       </widget>
      </item>

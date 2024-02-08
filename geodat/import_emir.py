@@ -26,7 +26,8 @@ import csv,re
 # https://forum.freecadweb.org/viewtopic.php?f=8&t=6973&p=230428#p230428
 
 import numpy as np
-data='''ncols        5
+data='''
+ncols        5
 nrows        6
 xllcorner    260.000000000000
 yllcorner    120.000000000000

@@ -35,6 +35,7 @@ from math import pow
 import urllib.request
 import urllib.parse
 import csv
+import numpy as np
 
 if FreeCAD.GuiUp:
     import FreeCADGui
@@ -435,7 +436,7 @@ def import_osm(latitude, longitude, osm_zoom, download_altitude=False, progress_
     FreeCADGui.updateGui()
     active_document.recompute()
 
-    _set_status(status, "Successfully imported OSM data.")
+    _set_status(status, "Successfully imported data.")
     _set_progress(progress_bar, 100)
 
 def import_csv(latitude, longitude, csv_content, has_headers=False, progress_bar=None, status=None):
@@ -451,46 +452,207 @@ def import_csv(latitude, longitude, csv_content, has_headers=False, progress_bar
         progress_bar (QProgressBar, optional): the progress bar to update. Defaults to None.
         status (QLabel, optional): the status widget. Defaults to None.
     """
+    _set_status(status, "Parsing data ...")
     _set_progress(progress_bar, 0)
 
     tm = TransverseMercator()
-    tm.lat = latitude
-    tm.lon = longitude
     (center_x, center_y) = tm.fromGeographic(latitude, longitude)
 
+    _set_status(status, "Transforming data ...")
+    _set_progress(progress_bar, 25)
     fc_points = []
-    print(f"csv_content={csv_content}")
     with StringIO(csv_content) as f:
         dialect = csv.Sniffer().sniff(f.read(1024))
         f.seek(0)
         reader = csv.reader(f, dialect)
-        for row in reader:
+        for i,row in enumerate(reader):
+            _set_progress(progress_bar, i)
             (x, y) = tm.fromGeographic(float(row[0]), float(row[1]))
             fc_points.append(FreeCAD.Vector(x-center_x, y-center_y, 0.0))
 
     # Let's close the wire
     fc_points.append(fc_points[0])
-    print(f"fc_points={fc_points}")
+
+    _set_status(status, "Creating visualizations ...")
+    _set_progress(progress_bar, 50)
+
     Draft.makeWire(fc_points)
-    active_document = FreeCAD.ActiveDocument.ActiveObject
-    active_document.ViewObject.LineColor=(1.0,0.0,0.0)
-    active_document.MakeFace = True
+    active_object = FreeCAD.ActiveDocument.ActiveObject
+    active_object.ViewObject.LineColor=(1.0,0.0,0.0)
     FreeCAD.activeDocument().recompute()
     FreeCADGui.SendMsgToActiveView("ViewFit")
+
+    _set_status(status, "Successfully imported data.")
+    _set_progress(progress_bar, 100)
+
+def import_gpx(latitude, longitude, altitude, gpx_filename, generate_nodes=False, progress_bar=None, status=None):
+    """Import Data from GPX content at the latitude / longitude.
+
+    Aditionally update the progress_bar and status widget if given.
+
+    Args:
+        latitude (float): the latitude of the data to download
+        longitude (float): the longitude of the data to download
+        gpx_content (str): the GPX content
+        generate_nodes (bool, optional): ???
+        progress_bar (QProgressBar, optional): the progress bar to update. Defaults to None.
+        status (QLabel, optional): the status widget. Defaults to None.
+    """
+    _set_status(status, "Parsing data ...")
+    _set_progress(progress_bar, 0)
+
+    tm = TransverseMercator()
+    (center_x, center_y) = tm.fromGeographic(latitude, longitude)
+
+    gpx_content = None
+    if os.path.isfile(gpx_filename):
+        with open(gpx_filename, "r", encoding="utf-8") as f:
+            gpx_content = f.read()
+
+    root = ET.fromstring(gpx_content)
+
+    _set_status(status, "Transforming data ...")
+    _set_progress(progress_bar, 25)
+
+    # What about different trkseg???
+    ns = root.tag[0:root.tag.index('}')+1]
+    trk = root.find(f"{ns}trk")
+
+    gpx_points = [ trkpt for trkpt in trk.find(f"{ns}trkseg").findall(f"{ns}trkpt") ]
+    def __to_fc_vector(gpx_point):
+        (x, y) = tm.fromGeographic(float(gpx_point.get('lat')), float(gpx_point.get('lon')))
+        z = float(gpx_point.find(f"{ns}ele").text)*1000.0
+        return FreeCAD.Vector(x-center_x, y-center_y, z)
+    fc_points = [ __to_fc_vector(gpx_point) for gpx_point in gpx_points ]
+
+    # Let's close the wire
+    _set_status(status, "Creating visualizations ...")
+    _set_progress(progress_bar, 50)
+
+    Draft.makeWire(fc_points)
+    active_object = FreeCAD.ActiveDocument.ActiveObject
+    active_object.ViewObject.LineColor = (1.0,0.0,0.0)
+    active_object.Placement.Base = FreeCAD.Vector(center_x, center_y, altitude*1000)
+    active_object.Label = trk.find(f"{ns}name").text
+    FreeCAD.activeDocument().recompute()
+    FreeCADGui.SendMsgToActiveView("ViewFit")
+
+    _set_status(status, "Successfully imported data.")
+    _set_progress(progress_bar, 100)
+
+def import_emir(emir_filename, progress_bar=None, status=None):
+    """Import Data from EMIR (CIVIL3D?) content at the latitude / longitude.
+
+    Aditionally update the progress_bar and status widget if given.
+
+    ```text
+    ncols        5
+    nrows        6
+    xllcorner    260.000000000000
+    yllcorner    120.000000000000
+    cellsize     10.000000000000
+    10 10 10 10 10 10 
+    10 11 12 13 10 10 
+    10 11 11 8 10 10 
+    10 11 11 9 10 10 
+    10 10 10 10 10 10
+    ```
+
+    Args:
+        emir_filename (str): the CIVIL 3D content
+        progress_bar (QProgressBar, optional): the progress bar to update. Defaults to None.
+        status (QLabel, optional): the status widget. Defaults to None.
+    """
+
+    _set_status(status, "Parsing data ...")
+    _set_progress(progress_bar, 0)
+
+    lines = []
+    if os.path.isfile(emir_filename):
+        with open(emir_filename, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    
+    props = {}
+    for line in lines[:5]:
+        (header, value) = line.split()[0:2]
+        props[header] = value
+
+    xllcorner = float(props['xllcorner'])*1000
+    yllcorner = float(props['yllcorner'])*1000
+    cellsize = float(props['cellsize'])*1000
+    ncols = int(props['ncols'])
+    nrows = int(props['nrows'])
+
+    _set_status(status, "Transforming data ...")
+    _set_progress(progress_bar, 25)
+
+    def __to_fc_point(i, j, value):
+        return FreeCAD.Vector(xllcorner+i*cellsize, yllcorner+j*cellsize, float(value)*1000)
+
+    fc_points = []
+    for i in range(ncols):
+        fc_points.append([ __to_fc_point(i, j, value) for j, value in enumerate(lines[5+i].split()) ])
+
+    _set_status(status, "Creating visualizations ...")
+    _set_progress(progress_bar, 50)
+
+    active_document = FreeCAD.ActiveDocument
+    group = active_document.addObject("App::DocumentObjectGroup","GRP_EmirImport")
+
+    # Then create a BSpline for each column and row
+    for i in range(ncols):
+        Draft.makeBSpline(fc_points[i])
+        group.addObject(active_document.ActiveObject)
+
+    for i in range(nrows):
+        Draft.makeBSpline([ col[i] for col in fc_points ])
+        group.addObject(active_document.ActiveObject)
+
+    FreeCAD.activeDocument().recompute()
+    FreeCADGui.SendMsgToActiveView("ViewFit")
+
+    _set_status(status, "Successfully imported data.")
+    _set_progress(progress_bar, 100)
+
+def import_lidar(lidar_filename, progress_bar=None, status=None):
+    """Import Data from LIDAR content at the latitude / longitude.
+
+    Aditionally update the progress_bar and status widget if given.
+
+    Args:
+        lidar_filename (str): the CIVIL 3D content
+        progress_bar (QProgressBar, optional): the progress bar to update. Defaults to None.
+        status (QLabel, optional): the status widget. Defaults to None.
+    """
+
+    _set_status(status, "Parsing data ...")
+    _set_progress(progress_bar, 0)
+
+    FreeCAD.activeDocument().recompute()
+    FreeCADGui.SendMsgToActiveView("ViewFit")
+
+    _set_status(status, "Successfully imported data.")
+    _set_progress(progress_bar, 100)
+
 
 # Greenwich
 STD_ZOOM = 17
 STD_LATITUDE = 51.47786
 STD_LONGITUDE = 0.0
 
-class _CommandImport:
+class GeoData_Import:
     """GeoData Import command definition
 
     Returns:
         _type_: _description_
     """
     def GetResources(self):
-        return {'Pixmap'  : 'GeoData_Import',
+        __dirname__ = os.path.join(FreeCAD.getResourceDir(), "Mod", "FreeCAD-geodata")
+        if not os.path.isdir(__dirname__):
+            __dirname__ = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "FreeCAD-geodata")
+        if not os.path.isdir(__dirname__):
+            FreeCAD.Console.PrintError("Failed to determine the install location of the GeoData workbench. Check your installation.\n")
+        return {'Pixmap'  : os.path.join(__dirname__, "Resources", "icons", "GeoData_Import.svg"),
                 'MenuText': QT_TRANSLATE_NOOP("GeoData","Import Geo Data."),
                 'Accel': "I, O",
                 'ToolTip': QT_TRANSLATE_NOOP("GeoData","Import Geo data.")}
@@ -515,11 +677,15 @@ class _CommandImport:
         self.Zoom = STD_ZOOM
         self.Latitude = STD_LATITUDE
         self.Longitude = STD_LONGITUDE
+        self.Altitude = 0.0
         self.CsvContent = f"{STD_LATITUDE};{STD_LONGITUDE}"
         self.CsvFilename = None
+        self.GpxFilename = None
+        self.EmirFilename = None
+        self.LidarFilename = None
 
         self.dialog = FreeCADGui.PySideUic.loadUi(
-            os.path.join(os.path.dirname(__file__), "GeoDataImportDialog.ui")
+            os.path.join(os.path.dirname(__file__), "GeoData_Import.ui")
         )
 
         self.dialog.tabs.currentChanged.connect(self.onTabBarClicked)
@@ -531,10 +697,22 @@ class _CommandImport:
         self.dialog.osmLatitude.valueChanged.connect(self.onOsmLatitudeChanged)
         self.dialog.osmLongitude.valueChanged.connect(self.onOsmLongitudeChanged)
 
-        self.dialog.csvSelectFile.clicked.connect(self.onCsvSelectFile)
-        self.dialog.csvFilename.textChanged.connect(self.onCsvFilenameChanged)
         self.dialog.csvLatitude.valueChanged.connect(self.onCsvLatitudeChanged)
         self.dialog.csvLongitude.valueChanged.connect(self.onCsvLongitudeChanged)
+        self.dialog.csvSelectFile.clicked.connect(self.onCsvSelectFile)
+        self.dialog.csvFilename.textChanged.connect(self.onCsvFilenameChanged)
+
+        self.dialog.gpxLatitude.valueChanged.connect(self.onGpxLatitudeChanged)
+        self.dialog.gpxLongitude.valueChanged.connect(self.onGpxLongitudeChanged)
+        self.dialog.gpxAltitude.valueChanged.connect(self.onGpxAltitudeChanged)
+        self.dialog.gpxSelectFile.clicked.connect(self.onGpxSelectFile)
+        self.dialog.gpxFilename.textChanged.connect(self.onGpxFilenameChanged)
+
+        self.dialog.emirSelectFile.clicked.connect(self.onEmirSelectFile)
+        self.dialog.emirFilename.textChanged.connect(self.onEmirFilenameChanged)
+
+        self.dialog.lidarSelectFile.clicked.connect(self.onLidarSelectFile)
+        self.dialog.lidarFilename.textChanged.connect(self.onLidarFilenameChanged)
 
         self.dialog.btnImport.clicked.connect(self.onImport)
         self.dialog.btnClose.clicked.connect(self.onClose)
@@ -562,6 +740,9 @@ class _CommandImport:
 
         self.updateCsvFields()
         self.updateCsvCoordinates()
+        self.updateGpxFields()
+        self.updateGpxCoordinates()
+        self.updateEmirFields()
 
         self.dialog.btnImport.setIcon(
             QtGui.QIcon.fromTheme("edit-undo", QtGui.QIcon(":/Resources/icons/GeoData_Import.svg"))
@@ -735,39 +916,6 @@ class _CommandImport:
         self.updateOsmUrl()
         self.updateOsmCoordinates()
 
-    def onCsvSelectFile(self):
-        """Callback to open the CSV file picker
-        """
-        pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
-        home_dir = os.path.expanduser('~')
-        csv_dirname = pref.GetString("LastCsvSelectDirname", home_dir)
-        if not os.path.isdir(csv_dirname):
-            csv_dirname = home_dir
-        csv_filename, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self.dialog,
-            QT_TRANSLATE_NOOP("GeoData", "Open CSV"),
-            csv_dirname,
-            QT_TRANSLATE_NOOP("GeoData", "CSV Files (*.csv *.tsv)")
-        )
-        pref.SetString("LastCsvSelectDirname", os.path.dirname(csv_filename))
-        if os.path.isfile(csv_filename):
-            self.CsvFilename = csv_filename
-            with open(self.CsvFilename, "r") as f:
-                self.CsvContent = f.read()
-            self.updateCsvFields()
-
-    def onCsvFilenameChanged(self, csv_filename):
-        if os.path.isfile(csv_filename):
-            pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
-            pref.SetString("LastCsvSelectDirname", os.path.dirname(csv_filename))
-            self.CsvFilename = csv_filename
-            with open(self.CsvFilename, "r") as f:
-                self.CsvContent = f.read()
-            self.updateCsvFields()
-
-    def onCsvContent(self, text):
-        self.CsvContent = text
-
     def onCsvLatitudeChanged(self,d):
         """Callback to set the Latitude
 
@@ -787,6 +935,118 @@ class _CommandImport:
         self.Longitude = d
         FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Longitude", self.Longitude)
         self.updateCsvCoordinates()
+
+    def onCsvSelectFile(self):
+        """Callback to open the file picker
+        """
+        self._onSelectFile("CSV Files (*.csv *.tsv)", "LastCsvSelectDirname", "CsvFilename", _CommandImport.updateCsvFields)
+        if os.path.isfile(self.CsvFilename):
+            with open(self.CsvFilename, "r") as f:
+                self.CsvContent = f.read()
+            self.updateCsvFields()
+
+    def onCsvFilenameChanged(self, filename):
+        self._onFilenameChanged(filename, "LastCsvSelectDirname", "CsvFilename", _CommandImport.updateCsvFields)
+        if os.path.isfile(self.CsvFilename):
+            with open(self.CsvFilename, "r") as f:
+                self.CsvContent = f.read()
+            self.updateCsvFields()
+
+    def onCsvContent(self, text):
+        self.CsvContent = text
+
+    def onGpxLatitudeChanged(self,d):
+        """Callback to set the Latitude
+
+        Args:
+            d (float): the latitude
+        """
+        self.Latitude = d
+        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Latitude", self.Latitude)
+        self.updateGpxCoordinates()
+
+    def onGpxLongitudeChanged(self,d):
+        """Callback to set the Longitude
+
+        Args:
+            d (float): the longitude
+        """
+        self.Longitude = d
+        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Longitude", self.Longitude)
+        self.updateGpxCoordinates()
+
+    def onGpxAltitudeChanged(self,d):
+        """Callback to set the altitude
+
+        Args:
+            d (float): the altitude
+        """
+        self.Altitude = d
+        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Altitude", self.Altitude)
+        self.updateGpxCoordinates()
+
+    def onGpxSelectFile(self):
+        """Callback to open the file picker
+        """
+        self._onSelectFile("GPX Files (*.gpx)", "LastGpxSelectDirname", "GpxFilename", _CommandImport.updateGpxFields)
+
+    def onGpxFilenameChanged(self, filename):
+        """Callback when the file has changed
+        """
+        self._onFilenameChanged(filename, "LastGpxSelectDirname", "GpxFilename", _CommandImport.updateGpxFields)
+
+    def onEmirSelectFile(self):
+        """Callback to open the file picker
+        """
+        self._onSelectFile("EMIR Files (*.dat)", "LastEmirSelectDirname", "EmirFilename", _CommandImport.updateEmirFields)
+
+    def onEmirFilenameChanged(self, filename):
+        """Callback when the file has changed
+        """
+        self._onFilenameChanged(filename, "LastEmirSelectDirname", "EmirFilename", _CommandImport.updateEmirFields)
+
+    def onLidarSelectFile(self):
+        """Callback to open the file picker
+        """
+        self._onSelectFile("LIDAR Files (*.las)", "LastLidarSelectDirname", "LidarFilename", _CommandImport.updateLidarFields)
+
+    def onLidarFilenameChanged(self, lidar_filename):
+        """Callback when the file has changed
+        """
+        self._onFilenameChanged(lidar_filename, "LastLidarSelectDirname", "LidarFilename", _CommandImport.updateLidarFields)
+
+    def _onSelectFile(self, file_type, pref_name, attr_name, upd_function):
+        """Call the file picker for the specified file.
+
+        Args:
+            file_type (str): The file type description used in the file picker UI
+            pref_name (str): The preference name to set to remember the last user path
+            attr_name (str): The attribute name to set on succeful file selection
+            upd_function (func): The argument less function to call when the file has been updated
+        """
+
+        pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
+        home_dir = os.path.expanduser('~')
+        file_dirname = pref.GetString(pref_name, home_dir)
+        if not os.path.isdir(file_dirname):
+            file_dirname = home_dir
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self.dialog,
+            QT_TRANSLATE_NOOP("GeoData", "Import File"),
+            file_dirname,
+            QT_TRANSLATE_NOOP("GeoData", file_type)
+        )
+        pref.SetString(pref_name, os.path.dirname(filename))
+        if os.path.isfile(filename):
+            setattr(self, attr_name, filename)
+            upd_function(self)
+
+    def _onFilenameChanged(self, filename, pref_name, attr_name, upd_function):
+        if os.path.isfile(filename):
+            pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
+            pref.SetString(pref_name, os.path.dirname(filename))
+            setattr(self, attr_name, filename)
+            upd_function(self)
 
     def onImport(self):
         self.dialog.progressBar.setVisible(True)
@@ -813,12 +1073,36 @@ class _CommandImport:
                 self.dialog.csvHasHeaders.isChecked(),
                 self.dialog.progressBar,
                 self.dialog.status)
+        elif current_tab == 2:
+            # GPX
+            import_gpx(
+                self.Latitude,
+                self.Longitude,
+                self.Altitude,
+                self.GpxFilename,
+                self.dialog.gpxGenerateDataNodes.isChecked(),
+                self.dialog.progressBar,
+                self.dialog.status)
+        elif current_tab == 4:
+            # EMIR
+            import_emir(
+                self.EmirFilename,
+                self.dialog.progressBar,
+                self.dialog.status)
+        elif current_tab == 8:
+            # LIDAR
+            import_lidar(
+                self.LidarFilename,
+                self.dialog.progressBar,
+                self.dialog.status)
         else:
             self.dialog.status.setVisible(False)
         self.dialog.progressBar.setVisible(False)
 
     def onClose(self):
-        FreeCAD.Console.PrintLog(f"Closing {self.dialog}\n")
+        pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
+        pref.SetInt("WindowWidth", self.dialog.frameSize().width())
+        pref.SetInt("WindowHeight", self.dialog.frameSize().height())
         self.dialog.done(0)
 
     def updateBrowserUrl(self):
@@ -845,7 +1129,7 @@ class _CommandImport:
         self.dialog.osmLongitude.setValue(self.Longitude)
 
     def updateCsvFields(self):
-        """Update the dialog cvs filename.
+        """Update the dialog filename.
         """
         self.dialog.csvFilename.setText(self.CsvFilename)
         self.dialog.csvContent.setPlainText(self.CsvContent)
@@ -857,6 +1141,29 @@ class _CommandImport:
         self.dialog.csvLatitude.setValue(self.Latitude)
         self.dialog.csvLongitude.setValue(self.Longitude)
 
+    def updateGpxFields(self):
+        """Update the dialog filename.
+        """
+        self.dialog.gpxFilename.setText(self.GpxFilename)
+
+    def updateGpxCoordinates(self):
+        """Update the dialog coordinate fields with the the latitude
+        and longitude.
+        """
+        self.dialog.gpxLatitude.setValue(self.Latitude)
+        self.dialog.gpxLongitude.setValue(self.Longitude)
+        self.dialog.gpxAltitude.setValue(self.Altitude)
+
+    def updateEmirFields(self):
+        """Update the dialog filename.
+        """
+        self.dialog.emirFilename.setText(self.EmirFilename)
+
+    def updateLidarFields(self):
+        """Update the dialog filename.
+        """
+        self.dialog.lidarFilename.setText(self.LidarFilename)
+
     def _extract_coordinate_from_url(self, url):
         pattern = re.compile(r'https?://www.openstreetmap.org/#map=(\d+)/([\d,.-]+)/([\d,.-]+)')
         matches  = re.findall(pattern, url)
@@ -866,5 +1173,4 @@ class _CommandImport:
         return False, None, None, None
 
 if FreeCAD.GuiUp:
-    FreeCAD.Console.PrintLog('addCommand(GeoData_Import)\n')
-    FreeCADGui.addCommand('GeoData_Import', _CommandImport())
+    FreeCADGui.addCommand('GeoData_Import', GeoData_Import())
