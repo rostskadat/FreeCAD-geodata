@@ -1165,10 +1165,25 @@ class GeoData_Import:
         self.dialog.lidarFilename.setText(self.LidarFilename)
 
     def _extract_coordinate_from_url(self, url):
-        pattern = re.compile(r'https?://www.openstreetmap.org/#map=(\d+)/([\d,.-]+)/([\d,.-]+)')
+        pattern = re.compile(r'https?://www.openstreetmap.org/#map=(\d+)/([\d.-]+)/([\d.-]+)')
         matches  = re.findall(pattern, url)
         if len(matches) == 1:
             (zoom, latitude, longitude) = matches[0]
+            return True, int(zoom), float(latitude), float(longitude)
+        pattern = re.compile(r'https://www.google.com/maps/@([\d.-]+),([\d.-]+),([\d.-]+)z?')
+        matches  = re.findall(pattern, url)
+        if len(matches) == 1:
+            (latitude, longitude, zoom) = matches[0]
+            return True, int(zoom), float(latitude), float(longitude)
+        pattern = re.compile(r'https://www.bing.com/maps/\?cp=([\d.-]+)~([\d.-]+)&lvl([\d.]+)')
+        matches  = re.findall(pattern, url)
+        if len(matches) == 1:
+            (latitude, longitude, zoom) = matches[0]
+            return True, int(zoom), float(latitude), float(longitude)
+        pattern = re.compile(r'https://wego.here.com/\?map=([\d.-]+),([\d.-]+),([\d.]+).*')
+        matches  = re.findall(pattern, url)
+        if len(matches) == 1:
+            (latitude, longitude, zoom) = matches[0]
             return True, int(zoom), float(latitude), float(longitude)
         return False, None, None, None
 
