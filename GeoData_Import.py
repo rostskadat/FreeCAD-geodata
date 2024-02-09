@@ -513,7 +513,7 @@ class GeoData_Import:
         if FreeCAD.GuiUp:
             self.dialog.progressBar.setValue(progress)
             if status:
-                status.setText(status)
+                self.dialog.status.setText(status)
             FreeCADGui.updateGui()
 
     def updateBrowserUrl(self):
