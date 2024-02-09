@@ -40,24 +40,5 @@ try:
 except:
     FreeCAD.Console.PrintWarning("Geodat WB: Cannot import module named gdal gdalconst\n")
 
-# the menu entry list
-FreeCAD.tcmdsGeodat = []
-def Activated(self):
-    import re
-    FreeCAD.ActiveDocument.openTransaction(self.name)
-    if self.command != '':
-        if self.modul != '':
-            modul = self.modul
-        else:
-            modul = self.name
-        if sys.version_info[0] !=2:
-            Gui.doCommand("from importlib import reload")
-        
-        Gui.doCommand("import " + modul)
-        Gui.doCommand("import " + self.lmod)
-        Gui.doCommand("reload(" + self.lmod + ")")
-        docstring = "print();print(" + re.sub(r'\(.*\)', '.__doc__'+")", self.command)
-        Gui.doCommand(docstring)
-        Gui.doCommand(self.command)
-    FreeCAD.ActiveDocument.commitTransaction()
-    FreeCAD.ActiveDocument.recompute()
+FreeCAD.addImportType("OSM format (*.osm)","importOSM")
+FreeCAD.addExportType("CSV format (*.csv *.tsv)","importCSV")
