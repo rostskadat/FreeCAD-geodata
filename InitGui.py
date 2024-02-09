@@ -96,7 +96,7 @@ class GeoDataWorkbench(FreeCADGui.Workbench):
         #         FreeCADGui.addPreferencePage(":/ui/preferences-drafttexts.ui", QT_TRANSLATE_NOOP("Draft", "Draft"))
         #         FreeCADGui.draftToolBar.loadedPreferences = True
 
-        FreeCAD.Console.PrintLog('Loading GeoData workbench, done.\n')
+        FreeCAD.Console.PrintLog('Initialized GeoData workbench.\n')
 
     def Activated(self):
         """When entering the workbench."""
@@ -121,21 +121,3 @@ class GeoDataWorkbench(FreeCADGui.Workbench):
 
 
 FreeCADGui.addWorkbench(GeoDataWorkbench)
-
-from Init import *
-if FreeCAD.GuiUp:
-    FreeCADGui.addCommand('My_Test Geodat'        ,MyTestCmd2())
-    FreeCADGui.addCommand('Import OSM Map', mydialog())
-    FreeCADGui.addCommand('Import CSV', import_csv())
-    FreeCADGui.addCommand('Import GPX', import_gpx())
-    FreeCADGui.addCommand('Import Heights', importheights())
-    FreeCADGui.addCommand('Import SRTM', importsrtm())
-    FreeCADGui.addCommand('Import XYZ', import_xyz())
-    FreeCADGui.addCommand('Import LatLonZ', import_latlony())
-    FreeCADGui.addCommand('Import Image', import_image())
-    FreeCADGui.addCommand('Import ASTER', import_aster())
-    FreeCADGui.addCommand('Import LIDAR', import_lidar())
-    FreeCADGui.addCommand('Create House', createHouse())
-    FreeCADGui.addCommand('Navigator', navigator())
-    FreeCADGui.addCommand('ElevationGrid', ElevationGrid())
-    FreeCADGui.addCommand('Import EMIR', import_emir())

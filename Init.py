@@ -21,24 +21,25 @@
 #*                                                                        *
 #************************************************************************
 
+print("Executing geodata.Init.py ...\n")
+
 __title__="FreeCAD Geodata Toolkit"
 __author__ = "Thomas Gundermann"
 __url__ = "http://www.freecadbuch.de"
 __vers__ ="py3.01"
 
 import FreeCAD
-import FreeCADGui
 
 try:
     import cv2
 except:
-    FreeCAD.Console.PrintWarning("Geodat WB: Cannot import module named cv2\n")
+    FreeCAD.Console.PrintWarning("Geodat WB: Cannot import module named cv2. Some import might not be available.\n")
 
 try:
     import gdal
     import gdalconst
 except:
-    FreeCAD.Console.PrintWarning("Geodat WB: Cannot import module named gdal gdalconst\n")
+    FreeCAD.Console.PrintWarning("Geodat WB: Cannot import module named gdal gdalconst. Some import might not be available.\n")
 
 FreeCAD.addImportType("OSM format (*.osm)","importOSM")
 FreeCAD.addExportType("CSV format (*.csv *.tsv)","importCSV")

@@ -647,6 +647,19 @@
         <attribute name="title">
          <string>XYZ</string>
         </attribute>
+        <widget class="QLabel" name="label_21">
+         <property name="geometry">
+          <rect>
+           <x>170</x>
+           <y>150</y>
+           <width>231</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>NOT IMPLEMENTED</string>
+         </property>
+        </widget>
        </widget>
        <widget class="QWidget" name="tabEMIR">
         <property name="toolTip">
@@ -715,16 +728,55 @@
         <attribute name="title">
          <string>Image</string>
         </attribute>
+        <widget class="QLabel" name="label_22">
+         <property name="geometry">
+          <rect>
+           <x>170</x>
+           <y>160</y>
+           <width>231</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>NOT IMPLEMENTED</string>
+         </property>
+        </widget>
        </widget>
        <widget class="QWidget" name="tabLatLonY">
         <attribute name="title">
          <string>LatLonY</string>
         </attribute>
+        <widget class="QLabel" name="label_23">
+         <property name="geometry">
+          <rect>
+           <x>170</x>
+           <y>160</y>
+           <width>231</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>NOT IMPLEMENTED</string>
+         </property>
+        </widget>
        </widget>
        <widget class="QWidget" name="tabAster">
         <attribute name="title">
          <string>Aster</string>
         </attribute>
+        <widget class="QLabel" name="label_24">
+         <property name="geometry">
+          <rect>
+           <x>150</x>
+           <y>160</y>
+           <width>231</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>NOT IMPLEMENTED</string>
+         </property>
+        </widget>
        </widget>
        <widget class="QWidget" name="tabLidar">
         <property name="toolTip">
