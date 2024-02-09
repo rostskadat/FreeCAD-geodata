@@ -38,20 +38,19 @@ reload(sys)
 try:
     import cv2
 except:
-    FreeCAD.Console.PrintWarning("Geodat WB: Cannot import module named cv2\n")
+    FreeCAD.Console.PrintWarning("Geodat WB: Cannot import module named cv2. Some import might not be available.\n")
 
 try:
     import gdal
     import gdalconst
 except:
-    FreeCAD.Console.PrintWarning("Geodat WB: Cannot import module named gdal gdalconst\n")
+    FreeCAD.Console.PrintWarning("Geodat WB: Cannot import module named gdal gdalconst. Some import might not be available.\n")
 
 class GeoDataWorkbench(FreeCADGui.Workbench):
     """The GeoData workbench definition."""
 
     def __init__(self):
-        def QT_TRANSLATE_NOOP(context, text):
-            return text
+        from PySide.QtCore import QT_TRANSLATE_NOOP
 
         __dirname__ = os.path.join(FreeCAD.getResourceDir(), "Mod", "FreeCAD-geodata")
         if not os.path.isdir(__dirname__):
@@ -68,8 +67,7 @@ class GeoDataWorkbench(FreeCADGui.Workbench):
     def Initialize(self):
         """When the workbench is first loaded."""
 
-        def QT_TRANSLATE_NOOP(context, text):
-            return text
+        from PySide.QtCore import QT_TRANSLATE_NOOP
 
         import GeoData
 
@@ -79,29 +77,10 @@ class GeoDataWorkbench(FreeCADGui.Workbench):
         from draftutils.init_tools import init_toolbar, init_menu
         init_toolbar(self, QT_TRANSLATE_NOOP("Workbench", "GeoData tools"), self.geodata_toolbar)
         init_menu(self, QT_TRANSLATE_NOOP("Workbench", "GeoData"), self.geodata_toolbar)
-
-        FreeCADGui.addIconPath(":/icons")
-        FreeCADGui.addLanguagePath(":/translations")
-
-        # Set up preferences pages
-        # if hasattr(FreeCADGui, "draftToolBar"):
-        #     if not hasattr(FreeCADGui.draftToolBar, "loadedGeoDataPreferences"):
-        #         FreeCADGui.addPreferencePage(":/ui/preferences-GeoData.ui", QT_TRANSLATE_NOOP("GeoData", "GeoData"))
-        #         FreeCADGui.addPreferencePage(":/ui/preferences-GeoDataDefaults.ui", QT_TRANSLATE_NOOP("GeoData", "GeoData"))
-        #         FreeCADGui.draftToolBar.loadedArchPreferences = True
-        #     if not hasattr(FreeCADGui.draftToolBar, "loadedPreferences"):
-        #         FreeCADGui.addPreferencePage(":/ui/preferences-draft.ui", QT_TRANSLATE_NOOP("Draft", "Draft"))
-        #         FreeCADGui.addPreferencePage(":/ui/preferences-draftsnap.ui", QT_TRANSLATE_NOOP("Draft", "Draft"))
-        #         FreeCADGui.addPreferencePage(":/ui/preferences-draftvisual.ui", QT_TRANSLATE_NOOP("Draft", "Draft"))
-        #         FreeCADGui.addPreferencePage(":/ui/preferences-drafttexts.ui", QT_TRANSLATE_NOOP("Draft", "Draft"))
-        #         FreeCADGui.draftToolBar.loadedPreferences = True
-
         FreeCAD.Console.PrintLog('Initialized GeoData workbench.\n')
 
     def Activated(self):
         """When entering the workbench."""
-        # if hasattr(FreeCADGui, "Snapper"):
-        #     FreeCADGui.Snapper.show()
         import importlib
         modules = [module for name,module in sys.modules.items() if 'GeoData' in name]
         list(map(lambda module: importlib.reload(module), modules))
@@ -110,10 +89,6 @@ class GeoDataWorkbench(FreeCADGui.Workbench):
     def Deactivated(self):
         """When leaving the workbench."""
         FreeCAD.Console.PrintLog("GeoData workbench deactivated.\n")
-
-    # def ContextMenu(self, recipient):
-    #     """Define an optional custom context menu."""
-    #     self.appendContextMenu("Utilities", self.draft_context_commands)
 
     def GetClassName(self):
         """Type of workbench."""
