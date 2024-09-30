@@ -21,23 +21,23 @@
 #*                                                                         *
 #***************************************************************************
 
-__title__="FreeCAD GeoData2 Toolkit"
-__author__ = "Thomas Gundermann & al"
+__title__="FreeCAD GeoData Toolkit"
+__author__ = "Thomas Gundermann"
 __url__ = "http://www.freecadbuch.de"
 __vers__ ="py3.01"
 
+
+## \defgroup GeoData GeoData
+#  \ingroup PYTHONWORKBENCHES
+#  \brief Geo Data
+#
+#  This module provides tools to import geo data.
+
+'''The GeoData module provides tools to import Geo data.'''
+
 import FreeCAD as App
+if App.GuiUp:
+	import FreeCADGui as Gui
+	Gui.updateLocale()
 
-try:
-    import cv2
-except:
-    App.Console.PrintWarning("GeoData2 WB: Cannot import module named cv2. Some import might not be available.\n")
-
-try:
-    import gdal
-    import gdalconst
-except:
-    App.Console.PrintWarning("GeoData2 WB: Cannot import module named gdal gdalconst. Some import might not be available.\n")
-
-App.addImportType("OSM format (*.osm)","importOSM")
-App.addExportType("CSV format (*.csv *.tsv)","importCSV")
+from GeoData2_Import import *

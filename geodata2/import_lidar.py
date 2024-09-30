@@ -21,23 +21,36 @@
 #*                                                                         *
 #***************************************************************************
 
-__title__="FreeCAD GeoData2 Toolkit"
-__author__ = "Thomas Gundermann & al"
-__url__ = "http://www.freecadbuch.de"
-__vers__ ="py3.01"
+import json
+import os
+import pivy
+import time
+import urllib.request
+import urllib.parse
+import xml.etree.ElementTree as ET
 
-import FreeCAD as App
+import FreeCAD
+import FreeCADGui
+import Part
 
-try:
-    import cv2
-except:
-    App.Console.PrintWarning("GeoData2 WB: Cannot import module named cv2. Some import might not be available.\n")
+from .TransverseMercator import TransverseMercator
+from .inventortools import setcolors2
 
-try:
-    import gdal
-    import gdalconst
-except:
-    App.Console.PrintWarning("GeoData2 WB: Cannot import module named gdal gdalconst. Some import might not be available.\n")
+def import_lidar(lidar_filename, progress_bar=None, status=None):
+    """Import Data from LIDAR content at the latitude / longitude.
 
-App.addImportType("OSM format (*.osm)","importOSM")
-App.addExportType("CSV format (*.csv *.tsv)","importCSV")
+    Aditionally update the progress_bar and status widget if given.
+
+    Args:
+        lidar_filename (str): the CIVIL 3D content
+        progress_callback (func): a function to set the progress porcentage and the status. Defaults to None.
+    """
+    if not progress_callback:
+        def progress_callback(progress, status):
+            FreeCAD.Console.PrintLog(f"{status} ({progress}/100)\n")
+    progress_callback(0, "Parsing data ...")
+
+    FreeCAD.activeDocument().recompute()
+    FreeCADGui.SendMsgToActiveView("ViewFit")
+
+    progress_callback(100, "Successfully imported data.")

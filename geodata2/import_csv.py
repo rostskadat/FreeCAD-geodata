@@ -1,31 +1,31 @@
 #***************************************************************************
-#*                                                                        *
-#*   Copyright (c) 2016                                                     *  
-#*   <microelly2@freecadbuch.de>                                         * 
 #*                                                                         *
-#*   This program is free software; you can redistribute it and/or modify*
+#*   Copyright (c) 2016 <microelly2@freecadbuch.de>                        *
+#*   Copyright (c) 2024 Julien Masnada <rostskadat@gmail.com>              *
+#*                                                                         *
+#*   This program is free software; you can redistribute it and/or modify  *
 #*   it under the terms of the GNU Lesser General Public License (LGPL)    *
-#*   as published by the Free Software Foundation; either version 2 of    *
-#*   the License, or (at your option) any later version.                *
-#*   for detail see the LICENCE text file.                                *
-#*                                                                        *
-#*   This program is distributed in the hope that it will be useful,    *
+#*   as published by the Free Software Foundation; either version 2 of     *
+#*   the License, or (at your option) any later version.                   *
+#*   for detail see the LICENCE text file.                                 *
+#*                                                                         *
+#*   This program is distributed in the hope that it will be useful,       *
 #*   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
-#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        *
-#*   GNU Library General Public License for more details.                *
-#*                                                                        *
-#*   You should have received a copy of the GNU Library General Public    *
-#*   License along with this program; if not, write to the Free Software*
-#*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307*
-#*   USA                                                                *
-#*                                                                        *
-#************************************************************************
+#*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+#*   GNU Library General Public License for more details.                  *
+#*                                                                         *
+#*   You should have received a copy of the GNU Library General Public     *
+#*   License along with this program; if not, write to the Free Software   *
+#*   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  *
+#*   USA                                                                   *
+#*                                                                         *
+#***************************************************************************
 
 import csv
 import io
 
-import FreeCAD
-import FreeCADGui
+import FreeCAD as App
+import FreeCADGui as Gui
 import Draft
 
 from .TransverseMercator import TransverseMercator
@@ -44,9 +44,8 @@ def import_csv(latitude, longitude, csv_content, has_headers=False, progress_cal
     """
     if not progress_callback:
         def progress_callback(progress, status):
-            FreeCAD.Console.PrintLog(f"{status} ({progress}/100)\n")
+            App.Console.PrintLog(f"{status} ({progress}/100)\n")
     progress_callback(0, "Parsing data ...")
-
 
     tm = TransverseMercator()
     (center_x, center_y) = tm.fromGeographic(latitude, longitude)
@@ -61,7 +60,7 @@ def import_csv(latitude, longitude, csv_content, has_headers=False, progress_cal
         for i,row in enumerate(reader):
             progress_callback(i, "Parsing data ...")
             (x, y) = tm.fromGeographic(float(row[0]), float(row[1]))
-            fc_points.append(FreeCAD.Vector(x-center_x, y-center_y, 0.0))
+            fc_points.append(App.Vector(x-center_x, y-center_y, 0.0))
 
     # Let's close the wire
     fc_points.append(fc_points[0])
@@ -69,9 +68,9 @@ def import_csv(latitude, longitude, csv_content, has_headers=False, progress_cal
     progress_callback(50, "Creating visualizations ...")
 
     Draft.makeWire(fc_points)
-    active_object = FreeCAD.ActiveDocument.ActiveObject
+    active_object = App.ActiveDocument.ActiveObject
     active_object.ViewObject.LineColor=(1.0,0.0,0.0)
-    FreeCAD.activeDocument().recompute()
-    FreeCADGui.SendMsgToActiveView("ViewFit")
+    App.activeDocument().recompute()
+    Gui.SendMsgToActiveView("ViewFit")
 
     progress_callback(100, "Successfully imported data.")

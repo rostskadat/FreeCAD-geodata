@@ -17,23 +17,19 @@
 import json
 import os
 import re
-import FreeCAD
-import FreeCADGui
+import FreeCAD as App
+import FreeCADGui as Gui
 import WebGui
 
 from PySide2 import QtGui, QtCore, QtWidgets
 from NetworkManager import HAVE_QTNETWORK, InitializeNetworkManager
 from ConnectionChecker import ConnectionChecker
 
-if FreeCAD.GuiUp:
-    import FreeCADGui
-    from draftutils.translate import translate
+if App.GuiUp:
     from PySide.QtCore import QT_TRANSLATE_NOOP
 else:
     # \cond
-    def translate(ctxt,txt):
-        return txt
-    def QT_TRANSLATE_NOOP(ctxt,txt):
+    def QT_TRANSLATE_NOOP(ctxt, txt):
         return txt
     # \endcond
 
@@ -44,25 +40,22 @@ STD_ZOOM = 17
 STD_LATITUDE = 51.47786
 STD_LONGITUDE = 0.0
 
-class GeoData_Import:
-    """GeoData Import command definition
-
-    Returns:
-        _type_: _description_
+class GeoData2_Import:
+    """GeoData2 Import command definition
     """
     def GetResources(self):
-        __dirname__ = os.path.join(FreeCAD.getResourceDir(), "Mod", "FreeCAD-geodata")
+        __dirname__ = os.path.join(App.getResourceDir(), "Mod", "FreeCAD-geodata2")
         if not os.path.isdir(__dirname__):
-            __dirname__ = os.path.join(FreeCAD.getUserAppDataDir(), "Mod", "FreeCAD-geodata")
+            __dirname__ = os.path.join(App.getUserAppDataDir(), "Mod", "FreeCAD-geodata2")
         if not os.path.isdir(__dirname__):
-            FreeCAD.Console.PrintError("Failed to determine the install location of the GeoData workbench. Check your installation.\n")
-        return {'Pixmap'  : os.path.join(__dirname__, "Resources", "icons", "GeoData_Import.svg"),
-                'MenuText': QT_TRANSLATE_NOOP("GeoData","Import Geo Data."),
+            App.Console.PrintError("Failed to determine the install location of the GeoData2 workbench. Check your installation.\n")
+        return {'Pixmap'  : os.path.join(__dirname__, "Resources", "icons", "GeoData2_Import.svg"),
+                'MenuText': QT_TRANSLATE_NOOP("GeoData2","Import Geo Data."),
                 'Accel': "I, O",
-                'ToolTip': QT_TRANSLATE_NOOP("GeoData","Import Geo data.")}
+                'ToolTip': QT_TRANSLATE_NOOP("GeoData2","Import Geo data.")}
 
     def IsActive(self):
-        return not FreeCAD.ActiveDocument is None
+        return not App.ActiveDocument is None
 
     def Activated(self):
         InitializeNetworkManager()
@@ -76,7 +69,7 @@ class GeoData_Import:
         )
 
     def launch(self) -> None:
-        """Shows the GeoData Import UI"""
+        """Shows the GeoData2 Import UI"""
         self.Browser = None
         self.Zoom = STD_ZOOM
         self.Latitude = STD_LATITUDE
@@ -88,8 +81,8 @@ class GeoData_Import:
         self.EmirFilename = None
         self.LidarFilename = None
 
-        self.dialog = FreeCADGui.PySideUic.loadUi(
-            os.path.join(os.path.dirname(__file__), "GeoData_Import.ui")
+        self.dialog = Gui.PySideUic.loadUi(
+            os.path.join(os.path.dirname(__file__), "GeoData2_Import.ui")
         )
 
         self.dialog.tabs.currentChanged.connect(self.onTabBarClicked)
@@ -124,17 +117,17 @@ class GeoData_Import:
         self.dialog.status.setVisible(False)
 
         # restore window geometry from stored state
-        pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
+        pref = App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2")
         self.dialog.resize(pref.GetInt("WindowWidth", 800), pref.GetInt("WindowHeight", 600))
         self.dialog.tabs.setCurrentIndex(pref.GetInt("ImportDialogLastOpenTab", 0))
-        self.dialog.setWindowIcon(QtGui.QIcon(":Resources/icons/GeoData_Import.svg"))
+        self.dialog.setWindowIcon(QtGui.QIcon(":Resources/icons/GeoData2_Import.svg"))
 
         global GCP_ELEVATION_API_KEY
         GCP_ELEVATION_API_KEY = pref.GetString("GCP_ELEVATION_API_KEY")
 
-        self.dialog.osmLocationPresets.addItem(QT_TRANSLATE_NOOP("GeoData", "Select a location ..."))
+        self.dialog.osmLocationPresets.addItem(QT_TRANSLATE_NOOP("GeoData2", "Select a location ..."))
         self.LocationPresets = []
-        resource_dir = FreeCADGui.activeWorkbench().ResourceDir
+        resource_dir = Gui.activeWorkbench().ResourceDir
         with open(os.path.join(resource_dir, 'Presets', 'osm.json')) as f:
             presets = json.load(f)
             for preset in presets["osm"]:
@@ -149,10 +142,10 @@ class GeoData_Import:
         self.updateEmirFields()
 
         self.dialog.btnImport.setIcon(
-            QtGui.QIcon.fromTheme("edit-undo", QtGui.QIcon(":/Resources/icons/GeoData_Import.svg"))
+            QtGui.QIcon.fromTheme("edit-undo", QtGui.QIcon(":/Resources/icons/GeoData2_Import.svg"))
         )
-        # center the dialog over the FreeCAD window
-        mw = FreeCADGui.getMainWindow()
+        # center the dialog over the App window
+        mw = Gui.getMainWindow()
         self.dialog.move(
             mw.frameGeometry().topLeft()
             + mw.rect().center()
@@ -165,8 +158,8 @@ class GeoData_Import:
         if not self.connection_checker.isFinished():
             self.connection_check_message = QtWidgets.QMessageBox(
                 QtWidgets.QMessageBox.Information,
-                QT_TRANSLATE_NOOP("GeoData", "Checking connection"),
-                QT_TRANSLATE_NOOP("GeoData", "Checking for connection to Internet..."),
+                QT_TRANSLATE_NOOP("GeoData2", "Checking connection"),
+                QT_TRANSLATE_NOOP("GeoData2", "Checking for connection to Internet..."),
                 QtWidgets.QMessageBox.Cancel,
             )
             self.connection_check_message.buttonClicked.connect(
@@ -188,17 +181,17 @@ class GeoData_Import:
             self.connection_check_message.close()
         if HAVE_QTNETWORK:
             QtWidgets.QMessageBox.critical(
-                None, QT_TRANSLATE_NOOP("GeoData", "Connection failed"), message
+                None, QT_TRANSLATE_NOOP("GeoData2", "Connection failed"), message
             )
         else:
             QtWidgets.QMessageBox.critical(
                 None,
-                QT_TRANSLATE_NOOP("GeoData", "Missing dependency"),
-                QT_TRANSLATE_NOOP("GeoData", "Could not import QtNetwork -- see Report View for details. Addon Manager unavailable.",),
+                QT_TRANSLATE_NOOP("GeoData2", "Missing dependency"),
+                QT_TRANSLATE_NOOP("GeoData2", "Could not import QtNetwork -- see Report View for details. Addon Manager unavailable.",),
             )
 
     def onTabBarClicked(self, i):
-        pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
+        pref = App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2")
         pref.SetInt("ImportDialogLastOpenTab", i)
 
     def onOsmLocationPresetSelected(self, i):
@@ -209,12 +202,12 @@ class GeoData_Import:
         """
         if i == 0:
             self.LocationPreset = None
-            if hasattr(FreeCAD, "LastLocationPreset"):
-                del FreeCAD.LastLocationPreset
+            if hasattr(App, "LastLocationPreset"):
+                del App.LastLocationPreset
         elif i <= len(self.LocationPresets):
             self.LocationPreset = self.LocationPresets[i-1]
-            FreeCAD.LastLocationPreset = self.LocationPreset['name']
-        pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
+            App.LastLocationPreset = self.LocationPreset['name']
+        pref = App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2")
         pref.SetInt("LocationPresetIndex", i)
         if self.LocationPreset:
             self.Zoom = int(self.LocationPreset['zoom'])
@@ -283,7 +276,7 @@ class GeoData_Import:
             i (int): the zoom
         """
         self.Zoom = int(i) if i else STD_ZOOM
-        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetInt("Zoom", self.Zoom)
+        App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2").SetInt("Zoom", self.Zoom)
         self.updateBrowserUrl()
         self.updateOsmUrl()
         self.updateOsmCoordinates()
@@ -299,7 +292,7 @@ class GeoData_Import:
             d (float): the latitude
         """
         self.Latitude = d
-        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Latitude", self.Latitude)
+        App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2").SetFloat("Latitude", self.Latitude)
         self.updateBrowserUrl()
         self.updateOsmUrl()
         self.updateOsmCoordinates()
@@ -315,7 +308,7 @@ class GeoData_Import:
             d (float): the longitude
         """
         self.Longitude = d
-        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Longitude", self.Longitude)
+        App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2").SetFloat("Longitude", self.Longitude)
         self.updateBrowserUrl()
         self.updateOsmUrl()
         self.updateOsmCoordinates()
@@ -327,7 +320,7 @@ class GeoData_Import:
             d (float): the latitude
         """
         self.Latitude = d
-        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Latitude", self.Latitude)
+        App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2").SetFloat("Latitude", self.Latitude)
         self.updateCsvCoordinates()
 
     def onCsvLongitudeChanged(self,d):
@@ -337,20 +330,20 @@ class GeoData_Import:
             d (float): the longitude
         """
         self.Longitude = d
-        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Longitude", self.Longitude)
+        App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2").SetFloat("Longitude", self.Longitude)
         self.updateCsvCoordinates()
 
     def onCsvSelectFile(self):
         """Callback to open the file picker
         """
-        self._onSelectFile("CSV Files (*.csv *.tsv)", "LastCsvSelectDirname", "CsvFilename", _CommandImport.updateCsvFields)
+        self._onSelectFile("CSV Files (*.csv *.tsv)", "LastCsvSelectDirname", "CsvFilename", GeoData2_Import.updateCsvFields)
         if os.path.isfile(self.CsvFilename):
             with open(self.CsvFilename, "r") as f:
                 self.CsvContent = f.read()
             self.updateCsvFields()
 
     def onCsvFilenameChanged(self, filename):
-        self._onFilenameChanged(filename, "LastCsvSelectDirname", "CsvFilename", _CommandImport.updateCsvFields)
+        self._onFilenameChanged(filename, "LastCsvSelectDirname", "CsvFilename", GeoData2_Import.updateCsvFields)
         if os.path.isfile(self.CsvFilename):
             with open(self.CsvFilename, "r") as f:
                 self.CsvContent = f.read()
@@ -366,7 +359,7 @@ class GeoData_Import:
             d (float): the latitude
         """
         self.Latitude = d
-        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Latitude", self.Latitude)
+        App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2").SetFloat("Latitude", self.Latitude)
         self.updateGpxCoordinates()
 
     def onGpxLongitudeChanged(self,d):
@@ -376,7 +369,7 @@ class GeoData_Import:
             d (float): the longitude
         """
         self.Longitude = d
-        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Longitude", self.Longitude)
+        App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2").SetFloat("Longitude", self.Longitude)
         self.updateGpxCoordinates()
 
     def onGpxAltitudeChanged(self,d):
@@ -386,38 +379,38 @@ class GeoData_Import:
             d (float): the altitude
         """
         self.Altitude = d
-        FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData").SetFloat("Altitude", self.Altitude)
+        App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2").SetFloat("Altitude", self.Altitude)
         self.updateGpxCoordinates()
 
     def onGpxSelectFile(self):
         """Callback to open the file picker
         """
-        self._onSelectFile("GPX Files (*.gpx)", "LastGpxSelectDirname", "GpxFilename", _CommandImport.updateGpxFields)
+        self._onSelectFile("GPX Files (*.gpx)", "LastGpxSelectDirname", "GpxFilename", GeoData2_Import.updateGpxFields)
 
     def onGpxFilenameChanged(self, filename):
         """Callback when the file has changed
         """
-        self._onFilenameChanged(filename, "LastGpxSelectDirname", "GpxFilename", _CommandImport.updateGpxFields)
+        self._onFilenameChanged(filename, "LastGpxSelectDirname", "GpxFilename", GeoData2_Import.updateGpxFields)
 
     def onEmirSelectFile(self):
         """Callback to open the file picker
         """
-        self._onSelectFile("EMIR Files (*.dat)", "LastEmirSelectDirname", "EmirFilename", _CommandImport.updateEmirFields)
+        self._onSelectFile("EMIR Files (*.dat)", "LastEmirSelectDirname", "EmirFilename", GeoData2_Import.updateEmirFields)
 
     def onEmirFilenameChanged(self, filename):
         """Callback when the file has changed
         """
-        self._onFilenameChanged(filename, "LastEmirSelectDirname", "EmirFilename", _CommandImport.updateEmirFields)
+        self._onFilenameChanged(filename, "LastEmirSelectDirname", "EmirFilename", GeoData2_Import.updateEmirFields)
 
     def onLidarSelectFile(self):
         """Callback to open the file picker
         """
-        self._onSelectFile("LIDAR Files (*.las)", "LastLidarSelectDirname", "LidarFilename", _CommandImport.updateLidarFields)
+        self._onSelectFile("LIDAR Files (*.las)", "LastLidarSelectDirname", "LidarFilename", GeoData2_Import.updateLidarFields)
 
     def onLidarFilenameChanged(self, lidar_filename):
         """Callback when the file has changed
         """
-        self._onFilenameChanged(lidar_filename, "LastLidarSelectDirname", "LidarFilename", _CommandImport.updateLidarFields)
+        self._onFilenameChanged(lidar_filename, "LastLidarSelectDirname", "LidarFilename", GeoData2_Import.updateLidarFields)
 
     def _onSelectFile(self, file_type, pref_name, attr_name, upd_function):
         """Call the file picker for the specified file.
@@ -429,16 +422,16 @@ class GeoData_Import:
             upd_function (func): The argument less function to call when the file has been updated
         """
 
-        pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
+        pref = App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2")
         home_dir = os.path.expanduser('~')
         file_dirname = pref.GetString(pref_name, home_dir)
         if not os.path.isdir(file_dirname):
             file_dirname = home_dir
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(
             self.dialog,
-            QT_TRANSLATE_NOOP("GeoData", "Import File"),
+            QT_TRANSLATE_NOOP("GeoData2", "Import File"),
             file_dirname,
-            QT_TRANSLATE_NOOP("GeoData", file_type)
+            QT_TRANSLATE_NOOP("GeoData2", file_type)
         )
         pref.SetString(pref_name, os.path.dirname(filename))
         if os.path.isfile(filename):
@@ -447,7 +440,7 @@ class GeoData_Import:
 
     def _onFilenameChanged(self, filename, pref_name, attr_name, upd_function):
         if os.path.isfile(filename):
-            pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
+            pref = App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2")
             pref.SetString(pref_name, os.path.dirname(filename))
             setattr(self, attr_name, filename)
             upd_function(self)
@@ -456,13 +449,13 @@ class GeoData_Import:
         self.dialog.progressBar.setVisible(True)
         self.dialog.status.setVisible(True)
         current_tab = self.dialog.tabs.currentIndex()
+        import geodata2
         if current_tab == 0:
             # OSM
             global GCP_ELEVATION_API_KEY
             if self.dialog.osmDownloadAltitude.isChecked() and not GCP_ELEVATION_API_KEY:
-                FreeCAD.Console.PrintWarning(f"Altitude information not available because no GCP API key provided.\n")
-            import geodata
-            geodata.import_osm(
+                App.Console.PrintWarning(f"Altitude information not available because no GCP API key provided.\n")
+            geodata2.import_osm(
                 self.Latitude,
                 self.Longitude,
                 self.Zoom,
@@ -470,8 +463,8 @@ class GeoData_Import:
                 self.onImportProgress)
         elif current_tab == 1:
             # CSV
-            import geodata
-            geodata.import_csv(
+            import geodata2
+            geodata2.import_csv(
                 self.Latitude,
                 self.Longitude,
                 self.CsvContent,
@@ -479,8 +472,8 @@ class GeoData_Import:
                 self.onImportProgress)
         elif current_tab == 2:
             # GPX
-            import geodata
-            geodata.import_gpx(
+            import geodata2
+            geodata2.import_gpx(
                 self.Latitude,
                 self.Longitude,
                 self.Altitude,
@@ -489,14 +482,14 @@ class GeoData_Import:
                 self.onImportProgress)
         elif current_tab == 4:
             # EMIR
-            import geodata
-            geodata.import_emir(
+            import geodata2
+            geodata2.import_emir(
                 self.EmirFilename,
                 self.onImportProgress)
         elif current_tab == 8:
             # LIDAR
-            import geodata
-            geodata.import_lidar(
+            import geodata2
+            geodata2.import_lidar(
                 self.LidarFilename,
                 self.onImportProgress)
         else:
@@ -504,17 +497,17 @@ class GeoData_Import:
         self.dialog.progressBar.setVisible(False)
 
     def onClose(self):
-        pref = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData")
+        pref = App.ParamGet("User parameter:BaseApp/Preferences/Mod/GeoData2")
         pref.SetInt("WindowWidth", self.dialog.frameSize().width())
         pref.SetInt("WindowHeight", self.dialog.frameSize().height())
         self.dialog.done(0)
 
     def onImportProgress(self, progress, status):
-        if FreeCAD.GuiUp:
+        if App.GuiUp:
             self.dialog.progressBar.setValue(progress)
             if status:
                 self.dialog.status.setText(status)
-            FreeCADGui.updateGui()
+            Gui.updateGui()
 
     def updateBrowserUrl(self):
         """Update both the browser URL and the URL field with the zoom,
@@ -598,5 +591,5 @@ class GeoData_Import:
             return True, int(zoom), float(latitude), float(longitude)
         return False, None, None, None
 
-if FreeCAD.GuiUp:
-    FreeCADGui.addCommand('GeoData_Import', GeoData_Import())
+if App.GuiUp:
+    Gui.addCommand('GeoData2_Import', GeoData2_Import())

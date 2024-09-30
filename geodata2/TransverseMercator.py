@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-''' 
+'''
     TransverseMercator:
     "author": "Vladimir Elistratov <vladimir.elistratov@gmail.com> and gtoonstra",
     "wiki_url": "https://github.com/vvoovv/blender-geo/wiki/Import-OpenStreetMap-(.osm)",
@@ -17,13 +17,13 @@ import math
 class TransverseMercator:
     radius = 6378137
     radius = 6378137000
-    
+
     def __init__(self, **kwargs):
         # setting default values
         self.lat = 0 # in degrees
         self.lon = 0 # in degrees
         self.k = 1 # scale factor
-        
+
         for attr in kwargs:
             setattr(self, attr, kwargs[attr])
         self.latInRadians = math.radians(self.lat)
